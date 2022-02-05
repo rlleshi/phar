@@ -1,0 +1,6 @@
+[submodule "mmaction2"]
+	path = mmaction2/
+	url = https://github.com/open-mmlab/mmaction2
+[submodule "mmaction"]
+	path = mmaction
+	url = git@github.com:open-mmlab/mmaction2.git

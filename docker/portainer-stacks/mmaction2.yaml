@@ -1,0 +1,74 @@
+version: '3.7'
+
+services:
+  mmaction2_denseflow:
+    image: rlleshi/motionbank_mmaction2:denseflow
+    tty: true
+    deploy:
+      placement:
+        constraints: [node.hostname == motionbank-compute-00]
+    environment:
+      CUDA_VISIBLE_DEVICES: 3
+    restart: unless-stopped
+    volumes:
+      - data-transfer:/mnt/data_transfer
+
+  mmaction2_video:
+    image: rlleshi/motionbank_mmaction2:video
+    tty: true
+    deploy:
+      placement:
+        constraints: [node.hostname == motionbank-compute-00]
+    restart: unless-stopped
+    volumes:
+      - data-transfer:/mnt/data_transfer
+      - type: tmpfs
+        target: /dev/shm
+        tmpfs:
+          size: 27000000000 # ~27gb
+      - data-transfer-tuning:/mnt/data_transfer_tuning
+
+  mmaction2_rawframes:
+    image: rlleshi/motionbank_mmaction2:rawframes
+    tty: true
+    deploy:
+      placement:
+        constraints: [node.hostname == motionbank-compute-00]
+    environment:
+      CUDA_VISIBLE_DEVICES: 3
+    restart: unless-stopped
+    volumes:
+      - data-transfer:/mnt/data_transfer
+      - type: tmpfs
+        target: /dev/shm
+        tmpfs:
+         size: 4000000000 # ~4gb
+      - datasets:/datasets/
+
+  mmaction2_detection:
+    image: rlleshi/motionbank_mmaction2:detection
+    tty: true
+    deploy:
+      placement:
+        constraints: [node.hostname == motionbank-compute-00]
+    restart: unless-stopped
+    volumes:
+      - data-transfer:/mnt/data_transfer
+      - type: tmpfs
+        target: /dev/shm
+        tmpfs:
+          size: 4000000000 # ~4gb
+
+volumes:
+  # local
+  data-transfer:
+    driver: local
+    name: data-transfer
+
+  data-transfer-tuning:
+    driver: local
+    name: data-transfer-tuning
+
+  datasets:
+    driver: local
+    name: datasets

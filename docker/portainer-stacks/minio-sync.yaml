@@ -1,0 +1,98 @@
+version: '3.5'
+# checkout the `offical documentation` link above
+# this stack will read the minio files and write them to the volume, which is used by another stack
+# these two services will synchronize the file server (minio) with the volume in portainer and then you can add this volume to whatever
+# you do. The purpose of a volume in docker is just to hold bunch of files. You could create you stacks and link the volumes there
+
+services:
+  # service to read from the minio file server
+  mc-read:
+    # image comes from minio
+    image: minio/mc
+    deploy:
+      # deploys on GPU
+      placement:
+        constraints: [node.hostname == motionbank-compute-00]
+    secrets:
+      # the credentials defined in portainer secret?
+      - minio-credentials
+    volumes:
+      # link the volume
+      - data-transfer:/home/exchange
+    # docker files usually have their own entry point defined but you can overrite it
+    # So I guess this is entry point for command execution
+    entrypoint: /bin/bash
+    # the minio creadentials down are defined as secrets
+    command: >
+        -c "cd home
+        && cp /run/secrets/minio-credentials creds
+        && chmod 600 creds
+        && cat creds | mc alias set vort https://assets.vortanz.ai --api S3v2
+        && mc mirror vort/rejnald-in/ exchange/read --overwrite --remove"
+
+  # service to write to the minio file server
+  mc-write:
+    image: minio/mc
+    deploy:
+      placement:
+        constraints: [node.hostname == motionbank-compute-00]
+    secrets:
+      - minio-credentials
+    volumes:
+      - data-transfer:/home/exchange
+    entrypoint: /bin/bash
+    command: >
+        -c "cd home
+        && cp /run/secrets/minio-credentials creds
+        && chmod 600 creds
+        && cat creds | mc alias set vort https://assets.vortanz.ai --api S3v2
+        && mc mirror exchange/write vort/rejnald-out/ --overwrite --remove --watch"
+
+  mc-write-tuning:
+    image: minio/mc
+    deploy:
+      placement:
+        constraints: [node.hostname == motionbank-compute-00]
+    secrets:
+      - minio-credentials
+    volumes:
+      - data-transfer-tuning:/home/exchange
+    entrypoint: /bin/bash
+    command: >
+        -c "cd home
+        && cp /run/secrets/minio-credentials creds
+        && chmod 600 creds
+        && cat creds | mc alias set vort https://assets.vortanz.ai --api S3v2
+        && mc mirror exchange/write vort/har-tuning-out/ --overwrite --remove --watch"
+
+  mc-write-datasets:
+    image: minio/mc
+    deploy:
+      placement:
+        constraints: [node.hostname == motionbank-compute-00]
+    secrets:
+      - minio-credentials
+    volumes:
+      - datasets:/home/exchange
+    entrypoint: /bin/bash
+    command: >
+        -c "cd home
+        && cp /run/secrets/minio-credentials creds
+        && chmod 600 creds
+        && cat creds | mc alias set vort https://assets.vortanz.ai --api S3v2
+        && mc mirror exchange/write vort/datasets/ --overwrite --remove --watch"
+
+secrets:
+  minio-credentials:
+    external: true
+volumes:
+  # This volume is defined here. Doesn't exist anywhere
+  # was rejnald-test
+  data-transfer:
+    name: data-transfer
+
+  data-transfer-tuning:
+    name: data-transfer-tuning
+
+  datasets:
+    name: datasets

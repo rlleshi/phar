@@ -127,3 +127,13 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# data
+dataset/
+dataset_2/
+mmaction2/data/
+mmaction2/work_dir/
+mlruns/
+demo/
+demo/subclip_276.mp4
+annotator/via-3.0.11/
