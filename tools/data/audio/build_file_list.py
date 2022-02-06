@@ -1,13 +1,10 @@
 import os
 import os.path as osp
 import shutil
-import fileinput
 import sys
 import numpy as np
 
-from tqdm import tqdm
 from argparse import ArgumentParser
-from pathlib import Path
 from rich.console import Console
 
 sys.path.append('.')  # noqa
