@@ -38,6 +38,8 @@ def main():
 
     # build the recognizer from a config file and checkpoint file/url
     model = init_recognizer(cfg, args.checkpoint, device=device)
+    if not args.audio.endswith('.npy'):
+        raise NotImplementedError('Demo works on extracted audio features')
 
     results = inference_recognizer(model, args.audio)
 
@@ -45,7 +47,7 @@ def main():
     labels = [x.strip() for x in labels]
     results = [(labels[k[0]], k[1]) for k in results]
 
-    CONSOLE.print('The top-5 labels with corresponding scores are:', style='green')
+    CONSOLE.print('Scores:', style='green')
     for result in results:
         CONSOLE.print(f'{result[0]}: ', result[1])
 

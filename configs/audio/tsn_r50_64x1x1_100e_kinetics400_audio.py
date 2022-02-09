@@ -2,63 +2,65 @@
 # * dataset settings
 dataset_type = 'AudioFeatureDataset'
 data_root = ('/home/rejnald/projects/side_projects/phar/mmaction2/data/phar/'
-             'audio_feature/')
+             'audio/')
 data_root_val = data_root
 data_root_test = data_root
 ann_file_train = f'{data_root}/train.txt'
 ann_file_val = f'{data_root_val}/val.txt'
 ann_file_test = f'{data_root_test}/test.txt'
-num_classes = 2
+num_classes = 4
 
 # * model settings
 model = dict(
     type='AudioRecognizer',
-    backbone=dict(
-        type='ResNetAudio',
-        depth=50,
-        pretrained=None,
-        in_channels=1,
-        norm_eval=False),
+    backbone=dict(type='ResNet', depth=50, in_channels=1, norm_eval=False),
     cls_head=dict(
         type='AudioTSNHead',
         num_classes=num_classes,
-        in_channels=1024,
+        in_channels=2048,
         dropout_ratio=0.5,
         init_std=0.01),
     # model training and testing settings
     train_cfg=None,
     test_cfg=dict(average_clips='prob'))
 
+
 train_pipeline = [
-    dict(type='LoadAudioFeature'),
+    dict(type='AudioDecodeInit'),
     dict(type='SampleFrames', clip_len=64, frame_interval=1, num_clips=1),
-    dict(type='AudioFeatureSelector'),
+    dict(type='AudioDecode'),
+    dict(type='AudioAmplify', ratio=1.5),
+    # dict(type='MelLogSpectrogram'),
     dict(type='FormatAudioShape', input_format='NCTF'),
     dict(type='Collect', keys=['audios', 'label'], meta_keys=[]),
     dict(type='ToTensor', keys=['audios'])
 ]
 val_pipeline = [
-    dict(type='LoadAudioFeature'),
+    dict(type='AudioDecodeInit'),
     dict(
         type='SampleFrames',
         clip_len=64,
         frame_interval=1,
         num_clips=1,
         test_mode=True),
-    dict(type='AudioFeatureSelector'),
+    dict(type='AudioDecode'),
+    dict(type='AudioAmplify', ratio=1.5),
+    # dict(type='MelLogSpectrogram'),
     dict(type='FormatAudioShape', input_format='NCTF'),
     dict(type='Collect', keys=['audios', 'label'], meta_keys=[]),
     dict(type='ToTensor', keys=['audios'])
 ]
 test_pipeline = [
-    dict(type='LoadAudioFeature'),
+    dict(type='AudioDecodeInit'),
     dict(
         type='SampleFrames',
         clip_len=64,
         frame_interval=1,
-        num_clips=10,
+        num_clips=1,
         test_mode=True),
-    dict(type='AudioFeatureSelector'),
+    dict(type='AudioDecodeInit'),
+    dict(type='AudioAmplify', ratio=1.5),
+    # dict(type='MelLogSpectrogram'),
     dict(type='FormatAudioShape', input_format='NCTF'),
     dict(type='Collect', keys=['audios', 'label'], meta_keys=[]),
     dict(type='ToTensor', keys=['audios'])
@@ -99,7 +101,7 @@ optimizer = dict(
 optimizer_config = dict(grad_clip=dict(max_norm=40, norm_type=2))
 # learning policy
 lr_config = dict(policy='CosineAnnealing', min_lr=0)
-total_epochs = 480
+total_epochs = 540
 
 # * runtime settings
 checkpoint_config = dict(interval=10)

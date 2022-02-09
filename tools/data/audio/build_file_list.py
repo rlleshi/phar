@@ -1,4 +1,3 @@
-import os
 import os.path as osp
 import shutil
 import sys
@@ -7,19 +6,11 @@ import numpy as np
 from argparse import ArgumentParser
 from rich.console import Console
 
-sys.path.append('.')  # noqa
-import tools.utils as utils # noqa
+sys.path.append('./tools')  # noqa
+import utils as utils # noqa
 
 CONSOLE = Console()
 SPEC_EXT = '.npy'
-
-
-def get_num_rgb(path):
-    return max([
-        int(osp.splitext(frame)[0][4:])
-        for frame in os.listdir(path) if frame[:4] == 'img_'
-    ],
-               default=0)
 
 
 def parse_args():

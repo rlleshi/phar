@@ -8,21 +8,16 @@ data_root_test = data_root
 ann_file_train = f'{data_root}/train.txt'
 ann_file_val = f'{data_root_val}/val.txt'
 ann_file_test = f'{data_root_test}/test.txt'
-num_classes = 2
+num_classes = 4
 
 # * model settings
 model = dict(
     type='AudioRecognizer',
-    backbone=dict(
-        type='ResNetAudio',
-        depth=50,
-        pretrained=None,
-        in_channels=1,
-        norm_eval=False),
+    backbone=dict(type='ResNet', depth=18, in_channels=1, norm_eval=False),
     cls_head=dict(
         type='AudioTSNHead',
         num_classes=num_classes,
-        in_channels=1024,
+        in_channels=512,
         dropout_ratio=0.5,
         init_std=0.01),
     # model training and testing settings
@@ -56,7 +51,7 @@ test_pipeline = [
         type='SampleFrames',
         clip_len=64,
         frame_interval=1,
-        num_clips=10,
+        num_clips=1,
         test_mode=True),
     dict(type='AudioFeatureSelector'),
     dict(type='FormatAudioShape', input_format='NCTF'),
@@ -64,7 +59,7 @@ test_pipeline = [
     dict(type='ToTensor', keys=['audios'])
 ]
 data = dict(
-    videos_per_gpu=32,
+    videos_per_gpu=64,
     workers_per_gpu=1,
     test_dataloader=dict(videos_per_gpu=1, workers_per_gpu=1),
     val_dataloader=dict(videos_per_gpu=1, workers_per_gpu=1),
@@ -94,7 +89,7 @@ eval_config = dict(
 
 # optimizer
 optimizer = dict(
-    type='SGD', lr=0.05, momentum=0.9,
+    type='SGD', lr=0.1, momentum=0.9,
     weight_decay=0.0001)  # this lr is used for 8 gpus
 optimizer_config = dict(grad_clip=dict(max_norm=40, norm_type=2))
 # learning policy
