@@ -13,6 +13,7 @@ from collections import defaultdict
 import cv2
 import mmcv
 import numpy as np
+from rich.console import Console
 
 try:
     from mmdet.apis import inference_detector, init_detector
@@ -21,15 +22,21 @@ except ImportError:
     warnings.warn(
         'Please install MMDet and MMPose for pose extraction.')  # noqa: E501
 
-sys.path.append('human-action-recognition/')  # noqa
-import har.tools.helpers as helpers  # noqa isort:skip
+sys.path.append('tools/')  # noqa
+import utils as utils  # noqa isort:skip
 
+MMDET_ROOT = 'mmdetection'
+MMPOSE_ROOT = 'mmpose'
 args = abc.ABC()
 args = abc.abstractproperty()
-args.det_config = '../mmdetection/configs/faster_rcnn/faster_rcnn_r50_caffe_fpn_mstrain_1x_coco-person.py'  # noqa: E501
+args.det_config = f'{MMDET_ROOT}/configs/faster_rcnn/faster_rcnn_r50_caffe_fpn_mstrain_1x_coco-person.py'  # noqa: E501
 args.det_checkpoint = 'https://download.openmmlab.com/mmdetection/v2.0/faster_rcnn/faster_rcnn_r50_fpn_1x_coco-person/faster_rcnn_r50_fpn_1x_coco-person_20201216_175929-d022e227.pth'  # noqa: E501
-args.pose_config = '../mmpose/configs/body/2d_kpt_sview_rgb_img/topdown_heatmap/coco/hrnet_w32_coco_256x192.py'  # noqa: E501
+args.pose_config = f'{MMPOSE_ROOT}/configs/body/2d_kpt_sview_rgb_img/topdown_heatmap/coco/hrnet_w32_coco_256x192.py'  # noqa: E501
 args.pose_checkpoint = 'https://download.openmmlab.com/mmpose/top_down/hrnet/hrnet_w32_coco_256x192-c78dce93_20200708.pth'  # noqa: E501
+
+N_PERSON = 2  # for bboxes
+ANN_TO_INDEX = dict()
+CONSOLE = Console()
 
 
 def gen_id(size=8):
@@ -62,7 +69,7 @@ def detection_inference(args, frame_paths):
     assert model.CLASSES[0] == 'person', ('We require you to use a detector '
                                           'trained on COCO')
     results = []
-    print('Performing Human Detection for each frame')
+    CONSOLE.print('Performing Human Detection for each frame', style='green')
     prog_bar = mmcv.ProgressBar(len(frame_paths))
     for frame_path in frame_paths:
         result = inference_detector(model, frame_path)
@@ -90,7 +97,6 @@ def area(b):
 
 
 def removedup(bbox):
-
     def inside(box0, box1, thre=0.8):
         return intersection(box0, box1) / area(box0) > thre
 
@@ -134,9 +140,8 @@ def bbox2tracklet(bbox):
             matched = False
             for tlet_id in range(tracklet_id, -1, -1):
                 cond1 = iou(tracklets[tlet_id][-1][-1], box[idx]) >= iou_thre
-                cond2 = (
-                    t - tracklet_st_frame[tlet_id] - len(tracklets[tlet_id]) <
-                    10)
+                cond2 = (t - tracklet_st_frame[tlet_id] -
+                         len(tracklets[tlet_id]) < 10)
                 cond3 = tracklets[tlet_id][-1][0] != t
                 if cond1 and cond2 and cond3:
                     matched = True
@@ -154,8 +159,8 @@ def drop_tracklet(tracklet):
 
     def meanarea(track):
         boxes = np.stack([x[1] for x in track]).astype(np.float32)
-        areas = (boxes[..., 2] - boxes[..., 0]) * (
-            boxes[..., 3] - boxes[..., 1])
+        areas = (boxes[..., 2] - boxes[..., 0]) * (boxes[..., 3] -
+                                                   boxes[..., 1])
         return np.mean(areas)
 
     tracklet = {k: v for k, v in tracklet.items() if meanarea(v) > 5000}
@@ -232,8 +237,8 @@ def bboxes2bbox(bbox, num_frame):
         if item.shape[0] <= 2:
             ret[t, :item.shape[0]] = item
         else:
-            inds = sorted(
-                list(range(item.shape[0])), key=lambda x: -item[x, -1])
+            inds = sorted(list(range(item.shape[0])),
+                          key=lambda x: -item[x, -1])
             ret[t] = item[inds[:2]]
     for t in range(num_frame):
         if ret[t, 0, -1] <= 0.01:
@@ -251,23 +256,24 @@ def bboxes2bbox(bbox, num_frame):
 
 def det_postproc(det_results, vid):
     det_results = [removedup(x) for x in det_results]
-    n_person = 1
-    is_easy, bboxes = is_easy_example(det_results, n_person)
+    CONSOLE.print(f'\nn_person={N_PERSON}', style='green')
+
+    is_easy, bboxes = is_easy_example(det_results, N_PERSON)
     if is_easy:
         msg = f'\n{vid} Easy Example'
         logging.info(msg)
-        print(msg)
+        CONSOLE.print(msg, style='green')
         return bboxes
 
     tracklets = bbox2tracklet(det_results)
     tracklets = drop_tracklet(tracklets)
 
-    msg = (f'\n{vid } Hard {n_person}-person Example, '
+    msg = (f'\n{vid } Hard {N_PERSON}-person Example, '
            f'found {len(tracklets)} tracklet')
     logging.info(msg)
-    print(msg)
+    CONSOLE.print(msg, style='green')
 
-    if n_person == 1:
+    if N_PERSON == 1:
         if len(tracklets) == 1:
             tracklet = list(tracklets.values())[0]
             det_results = tracklet2bbox(tracklet, len(det_results))
@@ -279,7 +285,7 @@ def det_postproc(det_results, vid):
             return np.array([np.array([det_res]) for det_res in det_results])
             # * return det_results - specific to the NTU dataset
 
-    # n_person is 2 (not the case with BAST)
+    # * n_person = 2
     if len(tracklets) <= 2:
         tracklets = list(tracklets.values())
         bboxes = []
@@ -294,10 +300,12 @@ def det_postproc(det_results, vid):
 def pose_inference(args, frame_paths, det_results):
     model = init_pose_model(args.pose_config, args.pose_checkpoint,
                             args.device)
-    print('Performing Human Pose Estimation for each frame')
+    CONSOLE.print('Performing Human Pose Estimation for each frame',
+                  style='green')
     prog_bar = mmcv.ProgressBar(len(frame_paths))
 
-    num_frame, num_person = det_results.shape[:2]
+    num_frame = len(det_results)
+    num_person = max([len(x) for x in det_results])
     kp = np.zeros((num_person, num_frame, 17, 3), dtype=np.float32)
 
     for i, (f, d) in enumerate(zip(frame_paths, det_results)):
@@ -310,7 +318,7 @@ def pose_inference(args, frame_paths, det_results):
     return kp
 
 
-def pose_extraction(vid):
+def pose_extraction(vid, thr=None):
     frame_paths, img_shape = extract_frame(vid)
     det_results = detection_inference(args, frame_paths)
     det_results = det_postproc(det_results, vid)
@@ -322,7 +330,23 @@ def pose_extraction(vid):
     anno['img_shape'] = img_shape
     anno['original_shape'] = img_shape
     anno['total_frames'] = pose_results.shape[1]
-    anno['label'] = helpers.bast_label_to_number(args.ann, vid.split('/')[-2])
+    anno['label'] = ANN_TO_INDEX[vid.split('/')[-2]]
+
+    # filter pose estimation based on threshold
+    n_person = anno['keypoint_score'].shape[0]
+    n_frames = len(anno['keypoint_score'][0])
+    count_0 = 0
+    for k in range(0, n_person):
+        for i in range(0, n_frames):
+            for j in range(0, 17):  # 17 defined keypoints
+                if anno['keypoint_score'][k][i][j] < thr:
+                    anno['keypoint'][k][i][j] = 0
+                    count_0 += 1
+
+    CONSOLE.print(
+        f'\n{round(100 * count_0 / (n_person * n_frames * 17), 2)}% '
+        'of poses are incorect',
+        style='yellow')
     shutil.rmtree(osp.dirname(frame_paths[0]))
 
     return anno
@@ -333,16 +357,18 @@ def parse_args():
         description='Generate Pose Annotation for a single video')
     parser.add_argument('video', type=str, help='source video')
     parser.add_argument('ann', type=str, help='dataset annotations')
-    parser.add_argument(
-        '--out-dir',
-        type=str,
-        default='/mnt/data_transfer/write',
-        help='output dir')
-    parser.add_argument(
-        '--det-score-thr',
-        type=float,
-        default=0.5,
-        help='detection score threshold')
+    parser.add_argument('--out-dir',
+                        type=str,
+                        default='demo/pose',
+                        help='output dir')
+    parser.add_argument('--det-score-thr',
+                        type=float,
+                        default=0.5,
+                        help='detection score threshold')
+    parser.add_argument('--pose-score-thr',
+                        type=float,
+                        default=0.4,
+                        help='pose estimation score threshold')
     parser.add_argument('--device', type=str, default='cuda:0')
     args = parser.parse_args()
     return args
@@ -355,14 +381,17 @@ def main():
     args.video = global_args.video
     args.out_dir = global_args.out_dir
     args.det_score_thr = global_args.det_score_thr
+    args.pose_score_thr = global_args.pose_score_thr
     args.ann = global_args.ann
     out = osp.join(args.out_dir,
                    osp.splitext(args.video.split('/')[-1])[0]) + '.pkl'
     if osp.exists(out):
-        print(f'{out} exists. Skipping...')
+        CONSOLE.print(f'{out} exists. Skipping...', style='yellow')
         return
 
-    anno = pose_extraction(args.video)
+    global ANN_TO_INDEX
+    ANN_TO_INDEX = utils.annotations_dic(args.ann)
+    anno = pose_extraction(args.video, args.pose_score_thr)
     mmcv.dump(anno, out)
 
 

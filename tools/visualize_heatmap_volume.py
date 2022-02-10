@@ -6,26 +6,25 @@ import cv2
 import decord
 import moviepy.editor as mpy
 import numpy as np
+from mmaction.datasets.pipelines import Compose
 from mmcv import load
+
 from mmpose.apis import vis_pose_result
 from mmpose.models import TopDown
 
-from mmaction.datasets.pipelines import Compose
-
-sys.path.append('human-action-recognition/')  # noqa
-import har.tools.helpers as helpers  # noqa isort:skip
+sys.path.append('tools/')  # noqa
+import utils as utils  # noqa isort:skip
 
 keypoint_pipeline = [
     dict(type='PoseDecode'),
     dict(type='PoseCompact', hw_ratio=1., allow_imgpad=True),
     dict(type='Resize', scale=(-1, 64)),
     dict(type='CenterCrop', crop_size=64),
-    dict(
-        type='GeneratePoseTarget',
-        sigma=0.6,
-        use_score=True,
-        with_kp=True,
-        with_limb=False)
+    dict(type='GeneratePoseTarget',
+         sigma=0.6,
+         use_score=True,
+         with_kp=True,
+         with_limb=False)
 ]
 
 limb_pipeline = [
@@ -33,12 +32,11 @@ limb_pipeline = [
     dict(type='PoseCompact', hw_ratio=1., allow_imgpad=True),
     dict(type='Resize', scale=(-1, 64)),
     dict(type='CenterCrop', crop_size=64),
-    dict(
-        type='GeneratePoseTarget',
-        sigma=0.6,
-        use_score=True,
-        with_kp=False,
-        with_limb=True)
+    dict(type='GeneratePoseTarget',
+         sigma=0.6,
+         use_score=True,
+         with_kp=False,
+         with_limb=True)
 ]
 
 FONTFACE = cv2.FONT_HERSHEY_DUPLEX
@@ -144,10 +142,10 @@ def parse_args():
     parser.add_argument('video', type=str, help='source video')
     parser.add_argument('pose_ann', type=str, help='pose pickle annotation')
     parser.add_argument('ann', type=str, help='dataset annotations')
-    parser.add_argument(
-        '--det-score-thr', type=float, help='detection score threshold')
-    parser.add_argument(
-        '--out-dir', type=str, default='/mnt/data_transfer/write/')
+    parser.add_argument('--det-score-thr',
+                        type=float,
+                        help='detection score threshold')
+    parser.add_argument('--out-dir', type=str, default='demo/')
     parser.add_argument('--device', type=str, default='cuda:0')
     args = parser.parse_args()
     return args
@@ -156,15 +154,16 @@ def parse_args():
 def main():
     args = parse_args()
     anno = load(args.pose_ann)
-    categories = helpers.bast_annotations_to_list(args.ann)
+    categories = utils.annotations_list(args.ann)
     video_name = osp.splitext(args.video.split('/')[-1])[0]
 
     # visualize skeleton
-    vis_frames = vis_skeleton(
-        args.video, anno, categories[anno['label']], ratio=1)
-    cv2.imwrite(
-        osp.join(args.out_dir, f'{video_name}_pose.jpg'),
-        vis_frames[int(len(vis_frames) / 2)])
+    vis_frames = vis_skeleton(args.video,
+                              anno,
+                              categories[anno['label']],
+                              ratio=1)
+    cv2.imwrite(osp.join(args.out_dir, f'{video_name}_pose.jpg'),
+                vis_frames[int(len(vis_frames) / 2)])
     vid = mpy.ImageSequenceClip(vis_frames, fps=24)
     vid.write_videofile(osp.join(args.out_dir, f'{video_name}_pose.mp4'))
 
