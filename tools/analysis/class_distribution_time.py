@@ -1,59 +1,60 @@
 import glob
-import sys
 import json
 import os.path as osp
+import sys
+from argparse import ArgumentParser
+
 import numpy as np
 import pandas as pd
 import seaborn as sns
-
-from argparse import ArgumentParser
+import utils as utils  # noqa
 from rich.console import Console
 
-sys.path.append('.')  # noqa
-import tools.utils as utils # noqa
-
+sys.path.append('./tools')  # noqa
 
 CONSOLE = Console()
 ANN_EXT = '.csv'
 
 
 def get_actions_with_timestamps(path):
-    """ Given the path to a csv file, get its timestamps.
-        The function is specific to the temporal csv annotations
-        produced by the VIA annotator. """
+    """Given the path to a csv file, get its timestamps.
+
+    The function is specific to the temporal csv annotations produced by the
+    VIA annotator.
+    """
     results = []
     df = pd.read_csv(path)
     for i in range(1, len(df)):
         temp = str(df.iloc[i].value_counts()).split(' ')
         results.append({
-            'action': temp[0].split(':"')[1].strip('}"'),
-            'video': ''.join(list(filter(lambda x: x not in '["],', temp[6]))),
-            'start': float(temp[7][:-1]),
-            'end': float(temp[8][:-2])
+            'action':
+            temp[0].split(':"')[1].strip('}"'),
+            'video':
+            ''.join(list(filter(lambda x: x not in '["],', temp[6]))),
+            'start':
+            float(temp[7][:-1]),
+            'end':
+            float(temp[8][:-2])
         })
     return results
 
 
 def parse_args():
-    parser = ArgumentParser(prog='time analysis of annotation distribution')
-    parser.add_argument(
-        '--csv-dir',
-        default='dataset/',
-        help='directory of csv annotations')
-    parser.add_argument(
-        '--out_dir',
-        default='resources/')
-    parser.add_argument(
-        '--ann',
-        type=str,
-        default='resources/annotations.txt',
-        help='annotation file')
-    parser.add_argument(
-        '--level',
-        type=int,
-        default=1,
-        choices=[1, 2],
-        help='directory level of data')
+    parser = ArgumentParser(prog='time analysis of annotation distribution '
+                            'based on the CSV files annotations.')
+    parser.add_argument('--csv-dir',
+                        default='dataset/',
+                        help='directory of csv annotations')
+    parser.add_argument('--out_dir', default='resources/')
+    parser.add_argument('--ann',
+                        type=str,
+                        default='resources/annotations.txt',
+                        help='annotation file')
+    parser.add_argument('--level',
+                        type=int,
+                        default=1,
+                        choices=[1, 2],
+                        help='directory level of data')
     args = parser.parse_args()
     return args
 
@@ -62,7 +63,7 @@ def save_results(out, result):
     cls = [k for k in result.keys()]
     val = [v for v in result.values()]
     tot = sum(val)
-    val = list(map(lambda x: x/tot, val))
+    val = list(map(lambda x: x / tot, val))
 
     # save json
     result['total'] = tot
@@ -90,12 +91,13 @@ def main():
         search = osp.join(args.csv_dir, '*')
     elif args.level == 2:
         search = osp.join(args.csv_dir, '*', '*')
-    annotations = [item for item in glob.glob(search)
-                   if item.endswith(ANN_EXT)]
+    annotations = [
+        item for item in glob.glob(search) if item.endswith(ANN_EXT)
+    ]
 
     for ann in annotations:
         for action in get_actions_with_timestamps(ann):
-            label = action["action"].replace('-', '_')
+            label = action['action'].replace('-', '_')
             duration = action['end'] - action['start']
             if np.isnan(duration):
                 # faulty annotation
@@ -103,7 +105,8 @@ def main():
             try:
                 ann_count[label] += duration
             except KeyError:
-                CONSOLE.print(f'{ann} has misspelled label {label}', style='yellow')
+                CONSOLE.print(f'{ann} has misspelled label {label}',
+                              style='yellow')
 
     ann_count = {k: round(v / 60, 1) for k, v in ann_count.items()}
     save_results(args.out_dir, ann_count)
