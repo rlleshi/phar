@@ -19,3 +19,17 @@ def gen_id(size=8):
     """Generate a random id."""
     chars = string.ascii_uppercase + string.digits
     return ''.join(random.choice(chars) for _ in range(size))
+
+
+def prettify(byte_content):
+    """Prettify subprocess output.
+
+    Args:
+        byte_content ([type]): [description]
+
+    Returns:
+        [type]: [description]
+    """
+    decoded = byte_content.decode('utf-8')
+    formatted_output = decoded.replace('\\n', '\n').replace('\\t', '\t')
+    return formatted_output
