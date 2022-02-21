@@ -343,13 +343,11 @@ def pose_extraction(vid, thr=None):
                     anno['keypoint'][k][i][j] = 0
                     count_0 += 1
 
-    CONSOLE.print(
-        f'\n{round(100 * count_0 / (n_person * n_frames * 17), 2)}% '
-        'of poses are incorect',
-        style='yellow')
+    incorrect_rate = round(100 * count_0 / (n_person * n_frames * 17), 2)
+    CONSOLE.print(f'\n{incorrect_rate}% of poses are incorect', style='yellow')
     shutil.rmtree(osp.dirname(frame_paths[0]))
 
-    return anno
+    return anno, incorrect_rate
 
 
 def parse_args():
@@ -359,7 +357,7 @@ def parse_args():
     parser.add_argument('ann', type=str, help='dataset annotations')
     parser.add_argument('--out-dir',
                         type=str,
-                        default='demo/pose',
+                        default='mmaction2/data/phar/pose',
                         help='output dir')
     parser.add_argument('--det-score-thr',
                         type=float,
@@ -367,8 +365,13 @@ def parse_args():
                         help='detection score threshold')
     parser.add_argument('--pose-score-thr',
                         type=float,
-                        default=0.4,
+                        default=0.5,
                         help='pose estimation score threshold')
+    parser.add_argument('--incorrect-thr',
+                        type=int,
+                        default=50,
+                        help=('if > X% of poses have a lower confidence'
+                              ' than `poses-score-thr`, do not save the clip'))
     parser.add_argument('--device', type=str, default='cuda:0')
     args = parser.parse_args()
     return args
@@ -383,6 +386,7 @@ def main():
     args.det_score_thr = global_args.det_score_thr
     args.pose_score_thr = global_args.pose_score_thr
     args.ann = global_args.ann
+    args.incorrect_thr = global_args.incorrect_thr
     out = osp.join(args.out_dir,
                    osp.splitext(args.video.split('/')[-1])[0]) + '.pkl'
     if osp.exists(out):
@@ -391,8 +395,12 @@ def main():
 
     global ANN_TO_INDEX
     ANN_TO_INDEX = utils.annotations_dic(args.ann)
-    anno = pose_extraction(args.video, args.pose_score_thr)
-    mmcv.dump(anno, out)
+    anno, incorrect_rate = pose_extraction(args.video, args.pose_score_thr)
+
+    # save poses if they don't have more than `args.incorrect_thr %` of poses
+    # with a lower confidence than `args.poses_score_thr`
+    if incorrect_rate < args.incorrect_thr:
+        mmcv.dump(anno, out)
 
 
 if __name__ == '__main__':

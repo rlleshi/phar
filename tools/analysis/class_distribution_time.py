@@ -48,7 +48,7 @@ def parse_args():
     parser.add_argument('--out_dir', default='resources/')
     parser.add_argument('--ann',
                         type=str,
-                        default='resources/annotations.txt',
+                        default='resources/annotations/annotations.txt',
                         help='annotation file')
     parser.add_argument('--level',
                         type=int,
