@@ -165,10 +165,11 @@ def resize(file, height=None, width=None, rate=None):
 def extract_subclip(video, start, finish):
     """Extract subclip from video."""
     import moviepy.editor as mpy
+    CONSOLE.print('Writing video...', style='green')
+
     with mpy.VideoFileClip(video) as v:
         try:
             clip = v.subclip(start, finish)
-            CONSOLE.print('Writing video', style='green')
             clip.write_videofile(f'subclip_{video.split(os.sep)[-1]}',
                                  logger=None,
                                  audio_codec='aac')
@@ -178,7 +179,7 @@ def extract_subclip(video, start, finish):
             CONSOLE.print(log, style='bold red')
 
 
-# extract_subclip('276.mp4', 190, 600)
+extract_subclip('dataset_2/313.mp4', 345, None)
 
 
 # -----------------------------------------------------------------------------
@@ -363,7 +364,7 @@ def read_pickel(path):
         print(annotations)
 
 
-read_pickel('demo/pose/5HE6T27B.pkl')
+# read_pickel('demo/pose/5HE6T27B.pkl')
 
 # -----------------------------------------------------------------------------
 
