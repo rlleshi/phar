@@ -14,11 +14,10 @@ import pandas as pd
 from rich.console import Console
 from tqdm.contrib.concurrent import process_map
 
-import tools.utils as utils  # noqa
+sys.path.append('./tools')  # noqa: E501
+import utils as utils  # noqa isort:skip
 
 CONSOLE = Console()
-
-sys.path.append('.')  # noqa
 
 VIDEO_EXTS = ['mp4']
 ANN_EXT = '.csv'
@@ -139,6 +138,10 @@ def extract_clips(items):
             continue
 
         label = action['action'].replace('-', '_')
+        # skip video if its not part of annotations
+        if ANN_TO_INDEX.get(label, None) is None:
+            return
+
         n_clips = int(duration / clip_len)
         remainder = duration % clip_len
 

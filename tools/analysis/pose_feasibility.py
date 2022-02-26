@@ -7,11 +7,11 @@ from pathlib import Path
 
 import pandas as pd
 import seaborn as sns
-import utils as utils  # noqa
 from rich.console import Console
 from tqdm import tqdm
 
-sys.path.append('./tools')  # noqa
+sys.path.append('./tools')  # noqa: E501
+import utils as utils  # noqa isort:skip
 
 CONSOLE = Console()
 POSE_EXTR_PATH = 'tools/data/skeleton/pose_extraction.py'

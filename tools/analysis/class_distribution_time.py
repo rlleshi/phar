@@ -7,10 +7,10 @@ from argparse import ArgumentParser
 import numpy as np
 import pandas as pd
 import seaborn as sns
-import utils as utils  # noqa
 from rich.console import Console
 
-sys.path.append('./tools')  # noqa
+sys.path.append('./tools')  # noqa: E501
+import utils as utils  # noqa isort:skip
 
 CONSOLE = Console()
 ANN_EXT = '.csv'

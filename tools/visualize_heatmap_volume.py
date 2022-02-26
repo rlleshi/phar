@@ -141,7 +141,10 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Visualize Pose & Heatmap')
     parser.add_argument('video', type=str, help='source video')
     parser.add_argument('pose_ann', type=str, help='pose pickle annotation')
-    parser.add_argument('ann', type=str, help='dataset annotations')
+    parser.add_argument('--ann',
+                        type=str,
+                        default='resources/annotations/annotations.txt',
+                        help='dataset annotations')
     parser.add_argument('--det-score-thr',
                         type=float,
                         help='detection score threshold')
