@@ -8,16 +8,16 @@ import cv2
 import mmcv
 import numpy as np
 import torch
-from mmcv import DictAction
-from mmcv.runner import load_checkpoint
-
-from mmaction.datasets.pipelines import Compose
-from mmaction.models import build_model
+from mmaction.apis import inference_recognizer, init_recognizer
 from mmaction.utils import import_module_error_func
+from mmcv import DictAction
+from rich.console import Console
+
+CONSOLE = Console()
 
 try:
     from mmdet.apis import inference_detector, init_detector
-    from mmpose.apis import (init_pose_model, inference_top_down_pose_model,
+    from mmpose.apis import (inference_top_down_pose_model, init_pose_model,
                              vis_pose_result)
 except (ImportError, ModuleNotFoundError):
 
@@ -48,10 +48,13 @@ except ImportError:
     raise ImportError('Please install moviepy to enable output file')
 
 FONTFACE = cv2.FONT_HERSHEY_DUPLEX
-FONTSCALE = 0.75
-FONTCOLOR = (240, 230, 0)  # BGR, white
+FONTSCALE = 0.85
+FONTCOLOR = (255, 255, 0)  # BGR, white
+FONTCOLOR_SCORE = (0, 165, 255)
 THICKNESS = 1
 LINETYPE = 1
+
+# TODO: add json option
 
 
 def parse_args():
@@ -62,16 +65,16 @@ def parse_args():
         '--config',
         default=('configs/skeleton/posec3d/'
                  'slowonly_r50_u48_240e_ntu120_xsub_keypoint.py'),
-        help='posec3d config file path')
+        help='skeleton model config file path')
     parser.add_argument(
         '--checkpoint',
         default=('https://download.openmmlab.com/mmaction/skeleton/posec3d/'
                  'slowonly_r50_u48_240e_ntu120_xsub_keypoint/'
                  'slowonly_r50_u48_240e_ntu120_xsub_keypoint-6736b03f.pth'),
-        help='posec3d checkpoint file/url')
+        help='skeleton model checkpoint file/url')
     parser.add_argument(
         '--det-config',
-        default='demo/faster_rcnn_r50_fpn_2x_coco.py',
+        default='mmaction2/demo/faster_rcnn_r50_fpn_2x_coco.py',
         help='human detection config file path (from mmdet)')
     parser.add_argument(
         '--det-checkpoint',
@@ -82,29 +85,28 @@ def parse_args():
         help='human detection checkpoint file/url')
     parser.add_argument(
         '--pose-config',
-        default='demo/hrnet_w32_coco_256x192.py',
+        default='mmaction2/demo/hrnet_w32_coco_256x192.py',
         help='human pose estimation config file path (from mmpose)')
     parser.add_argument(
         '--pose-checkpoint',
         default=('https://download.openmmlab.com/mmpose/top_down/hrnet/'
                  'hrnet_w32_coco_256x192-c78dce93_20200708.pth'),
         help='human pose estimation checkpoint file/url')
-    parser.add_argument(
-        '--det-score-thr',
-        type=float,
-        default=0.9,
-        help='the threshold of human detection score')
-    parser.add_argument(
-        '--label-map',
-        default='demo/label_map_ntu120.txt',
-        help='label map file')
-    parser.add_argument(
-        '--device', type=str, default='cuda:0', help='CPU/CUDA device option')
-    parser.add_argument(
-        '--short-side',
-        type=int,
-        default=480,
-        help='specify the short-side length of the image')
+    parser.add_argument('--det-score-thr',
+                        type=float,
+                        default=0.9,
+                        help='the threshold of human detection score')
+    parser.add_argument('--label-map',
+                        default='tools/data/skeleton/label_map_ntu120.txt',
+                        help='label map file')
+    parser.add_argument('--device',
+                        type=str,
+                        default='cuda:0',
+                        help='CPU/CUDA device option')
+    parser.add_argument('--short-side',
+                        type=int,
+                        default=480,
+                        help='specify the short-side length of the image')
     parser.add_argument(
         '--cfg-options',
         nargs='+',
@@ -113,6 +115,10 @@ def parse_args():
         help='override some settings in the used config, the key-value pair '
         'in xxx=yyy format will be merged into config file. For example, '
         "'--cfg-options model.backbone.depth=18 model.backbone.with_cp=True'")
+    parser.add_argument('--pose-score-thr',
+                        type=float,
+                        default=0.6,
+                        help='pose estimation score threshold')
     args = parser.parse_args()
     return args
 
@@ -203,8 +209,12 @@ def main():
     # Get clip_len, frame_interval and calculate center index of each clip
     config = mmcv.Config.fromfile(args.config)
     config.merge_from_dict(args.cfg_options)
+    for component in config.data.test.pipeline:
+        if component['type'] == 'PoseNormalize':
+            component['mean'] = (w // 2, h // 2, .5)
+            component['max_value'] = (w, h, 1.)
 
-    test_pipeline = Compose(config.data.test.pipeline)
+    model = init_recognizer(config, args.checkpoint, args.device)
 
     # Load label_map
     label_map = [x.strip() for x in open(args.label_map).readlines()]
@@ -216,16 +226,17 @@ def main():
     pose_results = pose_inference(args, frame_paths, det_results)
     torch.cuda.empty_cache()
 
-    fake_anno = dict(
-        frame_dir='',
-        label=-1,
-        img_shape=(h, w),
-        original_shape=(h, w),
-        start_index=0,
-        modality='Pose',
-        total_frames=num_frame)
+    fake_anno = dict(frame_dir='',
+                     label=-1,
+                     img_shape=(h, w),
+                     original_shape=(h, w),
+                     start_index=0,
+                     modality='Pose',
+                     total_frames=num_frame)
     num_person = max([len(x) for x in pose_results])
-    # Current PoseC3D models are trained on COCO-keypoints (17 keypoints)
+    # num_person = 2
+    CONSOLE.print(f'# Persons: {num_person}\n', style='green')
+
     num_keypoint = 17
     keypoint = np.zeros((num_person, num_frame, num_keypoint, 2),
                         dtype=np.float16)
@@ -236,30 +247,30 @@ def main():
             pose = pose['keypoints']
             keypoint[j, i] = pose[:, :2]
             keypoint_score[j, i] = pose[:, 2]
+
     fake_anno['keypoint'] = keypoint
     fake_anno['keypoint_score'] = keypoint_score
+    count_0 = 0
 
-    imgs = test_pipeline(fake_anno)['imgs'][None]
-    imgs = imgs.to(args.device)
+    for k in range(0, num_person):
+        for i in range(0, num_frame):
+            for j in range(0, 17):  # 17 defined keypoints
+                if fake_anno['keypoint_score'][k][i][j] < args.pose_score_thr:
+                    fake_anno['keypoint'][k][i][j] = 0
+                    count_0 += 1
 
-    model = build_model(config.model)
-    load_checkpoint(model, args.checkpoint, map_location=args.device)
-    model.to(args.device)
-    model.eval()
+    incorrect_rate = round(100 * count_0 / (num_person * num_frame * 17), 2)
+    # TODO add in parse args
+    if incorrect_rate < 60:
+        CONSOLE.print(f'Clip has incorrect rate of {incorrect_rate}',
+                      style='red')
+        return
 
-    with torch.no_grad():
-        output = model(return_loss=False, imgs=imgs)
+    results = inference_recognizer(model, fake_anno)
 
-    action_idx = np.argmax(output)
-    action_label = label_map[action_idx]
-
-    output = np.delete(output, action_idx)
-    action_idx2 = np.argmax(output)
-    action_label2 = label_map[action_idx2]
-
-    output = np.delete(output, action_idx2)
-    action_idx3 = np.argmax(output)
-    action_label3 = label_map[action_idx3]
+    top_actions = 3
+    action_labels = [label_map[results[i][0]] for i in range(top_actions)]
+    action_scores = [results[i][1] for i in range(top_actions)]
 
     pose_model = init_pose_model(args.pose_config, args.pose_checkpoint,
                                  args.device)
@@ -267,23 +278,23 @@ def main():
         vis_pose_result(pose_model, frame_paths[i], pose_results[i])
         for i in range(num_frame)
     ]
+    x, y = 10, 30
+    x_y_dist = 200
     for frame in vis_frames:
-        cv2.putText(frame, action_label, (10, 30), FONTFACE, FONTSCALE,
-                    FONTCOLOR, THICKNESS, LINETYPE)
-        cv2.putText(frame, action_label2, (10, 60), FONTFACE, FONTSCALE,
-                    FONTCOLOR, THICKNESS, LINETYPE)
-        cv2.putText(frame, action_label3, (10, 90), FONTFACE, FONTSCALE,
-                    FONTCOLOR, THICKNESS, LINETYPE)
+        i = 0
+        for label, score in zip(action_labels, action_scores):
+            i += 1
+            cv2.putText(frame, label, (x, y * i), FONTFACE, FONTSCALE,
+                        FONTCOLOR, THICKNESS, LINETYPE)
+            cv2.putText(frame, str(round(100 * score,
+                                         2)), (x + x_y_dist, y * i), FONTFACE,
+                        FONTSCALE, FONTCOLOR_SCORE, THICKNESS, LINETYPE)
 
-    cv2.imwrite('frame.jpg', vis_frames[0])
     vid = mpy.ImageSequenceClip([x[:, :, ::-1] for x in vis_frames], fps=24)
     vid.write_videofile(args.out_filename, remove_temp=True)
 
     tmp_frame_dir = osp.dirname(frame_paths[0])
     shutil.rmtree(tmp_frame_dir)
-
-    print('result')
-    print(f'{action_label},{action_label2},{action_label3}')
 
 
 if __name__ == '__main__':

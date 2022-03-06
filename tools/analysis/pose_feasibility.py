@@ -28,13 +28,15 @@ def parse_args():
     parser.add_argument('--out_dir', default='mmaction2/data/phar/pose')
     parser.add_argument('--ann',
                         type=str,
-                        default='resources/annotations/annotations.txt',
+                        default='resources/annotations/annotations_pose.txt',
                         help='annotation file')
     parser.add_argument('--splits',
                         nargs='+',
                         default=['train', 'val', 'test'],
                         choices=['train', 'val', 'test'],
                         help='the splits where clips are found')
+    # TODO: 1) Consider lowering the threshold
+    # TODO: 2) Consider not making the pose points with low confidence zero
     parser.add_argument('--pose-score-thr',
                         type=float,
                         default=0.6,

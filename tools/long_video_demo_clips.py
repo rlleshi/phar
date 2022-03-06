@@ -1,22 +1,28 @@
 import argparse
 import os
+import os.path as osp
+import random
+import string
 import subprocess
-import sys
-import xml.etree.ElementTree as ET
 from itertools import repeat
 from multiprocessing import Manager, Pool, cpu_count
 
+import moviepy.editor as mpy
 import numpy as np
-from moviepy.editor import VideoFileClip, concatenate_videoclips
 from rich.console import Console
-
-sys.path.append('human-action-recognition/')  # noqa
-import har.tools.helpers as helpers  # noqa isort:skips
 
 CONSOLE = Console()
 manager = Manager()
 clips = manager.list()
 json_res = manager.list()
+
+MIN_CLIP_DUR = None
+
+
+def gen_id(size=8):
+    """Generate a random id."""
+    chars = string.ascii_uppercase + string.digits
+    return ''.join(random.choice(chars) for _ in range(size))
 
 
 def prettify(byte_content):
@@ -40,68 +46,36 @@ def parse_args():
     parser.add_argument('config', help='model config file')
     parser.add_argument('checkpoint', help='model checkpoint')
     parser.add_argument('out', help='out file. Video or Json')
-    parser.add_argument(
-        '--ann-bast',
-        type=str,
-        help='.eaf bast annotation file with timestamps')
-    parser.add_argument(
-        '--ann',
-        type=str,
-        default=('human-action-recognition/har/annotations/BAST/base/'
-                 'tanz_annotations.txt'),
-        help='for base or eval annotations')
-    parser.add_argument(
-        '--type',
-        type=str,
-        default='pose',
-        choices=['pose', 'recognition'],
-        help='whether the demo will be pose or recognition')
-    parser.add_argument(
-        '--num-processes',
-        type=int,
-        default=(cpu_count() - 1 or 1),
-        help='Number of processes to extract subclips')
-    parser.add_argument(
-        '--num-gpus',
-        type=int,
-        default=4,
-        help='Number of gpus to perform pose-har')
+    parser.add_argument('--ann',
+                        type=str,
+                        default='resources/annotations/annotations.txt',
+                        help='for base or eval annotations')
+    parser.add_argument('--type',
+                        type=str,
+                        default='pose',
+                        choices=['pose', 'recognition'],
+                        help='whether the demo will be pose or recognition')
+    parser.add_argument('--num-processes',
+                        type=int,
+                        default=(cpu_count() - 1 or 1),
+                        help='Number of processes to extract subclips')
+    parser.add_argument('--num-gpus',
+                        type=int,
+                        default=4,
+                        help='Number of gpus to perform pose-har')
+    parser.add_argument('--subclip-duration',
+                        type=int,
+                        default=10,
+                        help='duration of subclips')
     args = parser.parse_args()
     return args
 
 
-def get_time_segments(args):
-    tree = ET.parse(args.ann_bast)
-    root = tree.getroot()
-
-    # {'ts1': '3320', ..., 'ts58': '235798'}
-    timestamps = {}
-    for ts in root.iter('TIME_SLOT'):
-        id = ts.attrib['TIME_SLOT_ID']
-        if len(id) == 3:
-            id = f'{id[0:2]}0{id[2:]}'
-        timestamps[id] = ts.attrib['TIME_VALUE']
-
-    # [('ts1', 'ts3'}, ..., ('ts53', 'ts56')]
-    time_segments = []
-    ids = ['a' + str(i) for i in range(0, 10)]
-    for base_annotation in root.iter('ALIGNABLE_ANNOTATION'):
-        if base_annotation.attrib['ANNOTATION_ID'] not in ids:
-            continue
-        start_ts = base_annotation.attrib['TIME_SLOT_REF1']
-        end_ts = base_annotation.attrib['TIME_SLOT_REF2']
-        if len(start_ts) == 3:
-            start_ts = f'{start_ts[0:2]}0{start_ts[2:]}'
-        if len(end_ts) == 3:
-            end_ts = f'{end_ts[0:2]}0{end_ts[2:]}'
-        time_segments.append((start_ts, end_ts))
-
-    return timestamps, time_segments
-
-
 def pose(items):
     gpu, clips, args = items
-    script_path = 'demo/demo_posec3d.py'
+    script_path = 'tools/demo_skeleton.py'
+    if not osp.exists(script_path):
+        CONSOLE.print(f'{script_path} does not exist', style='red')
     for clip in clips:
         subargs = [
             'python',
@@ -119,8 +93,11 @@ def pose(items):
         ]
         try:
             result = subprocess.run(subargs, capture_output=True)
-            json_res.append(clip[2:4] + '-' +
-                            prettify(result.stdout).split('result')[1])
+
+            if args.out.endswith('.json'):
+                # TODO: currently doesn't work
+                json_res.append(clip[2:4] + '-' +
+                                prettify(result.stdout).split('result')[1])
         except Exception as e:
             CONSOLE.print(e, style='bold red')
 
@@ -151,18 +128,19 @@ def recognition(items):
 
 def extract_subclip(items):
     ts, timestamps, video = items
-    video = VideoFileClip(video)
-    start = float(timestamps[ts[0]]) / 1000
-    try:
-        finish = float(timestamps[ts[1]]) / 1000
-    except TypeError:
-        finish = timestamps[ts[1]]
+    video = mpy.VideoFileClip(video)
+    start = timestamps[ts[0]]
+    finish = timestamps[ts[1]]
 
-    clip_pth = f'{ts[0]}_{helpers.gen_id(4)}.mp4'
+    clip_pth = f'{ts[0]}_{gen_id()}.mp4'
     clips.append(clip_pth)
 
-    clip = video.subclip(start, finish)
     try:
+        clip = video.subclip(start, finish)
+        if clip.duration < MIN_CLIP_DUR:
+            CONSOLE.print(f'Subclip duration < {MIN_CLIP_DUR}. Skipping...',
+                          style='yellow')
+            return
         clip.write_videofile(clip_pth, logger=None, audio=False)
     except OSError as e:
         CONSOLE.print(e, style='bold red')
@@ -176,10 +154,11 @@ def merge_clips(clips, out):
     video_clips = []
     for clip in clips:
         try:
-            video_clips.append(VideoFileClip(clip))
+            video_clips.append(mpy.VideoFileClip(clip))
         except OSError:
             pass
-    result = concatenate_videoclips(video_clips)
+
+    result = mpy.concatenate_videoclips(video_clips, method='compose')
     result.write_videofile(out)
     delete_clips(clips)
 
@@ -197,19 +176,21 @@ def merge_json(json_res, time_segments, out):
 
 def main():
     args = parse_args()
-    if args.ann_bast is not None:
-        timestamps, time_segments = get_time_segments(args)
-    else:
-        # if no annotations, predict for 10s segments
-        splits = int(VideoFileClip(args.video).duration / 10)
-        timestamps = {f'ts{i:02}': 10000 * i for i in range(0, splits + 1)}
-        time_segments = [(f'ts{i:02}', f'ts{i+1:02}')
-                         for i in range(0, splits)]
-        # add a timestamp for any remaining segments < 10s
-        rest_timestamp = f'ts{int(list(timestamps.keys())[-1][2:]) + 1}'
-        timestamps[rest_timestamp] = None
-        time_segments.append(
-            (list(timestamps.keys())[-2], list(timestamps.keys())[-1]))
+    global MIN_CLIP_DUR
+    MIN_CLIP_DUR = args.subclip_duration
+
+    splits = int(
+        mpy.VideoFileClip(args.video).duration / args.subclip_duration)
+    timestamps = {
+        f'ts{i:02}': args.subclip_duration * i
+        for i in range(0, splits + 1)
+    }
+    time_segments = [(f'ts{i:02}', f'ts{i+1:02}') for i in range(0, splits)]
+    # add a timestamp for any remaining segments < 10s
+    rest_timestamp = f'ts{int(list(timestamps.keys())[-1][2:]) + 1}'
+    timestamps[rest_timestamp] = None
+    time_segments.append(
+        (list(timestamps.keys())[-2], list(timestamps.keys())[-1]))
 
     CONSOLE.print('Extracting subclips...', style='green')
     pool1 = Pool(args.num_processes)

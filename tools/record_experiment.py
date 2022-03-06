@@ -1,10 +1,10 @@
 import os
 import os.path as osp
-import mlflow
 import re
-
 from argparse import ArgumentParser
 from pathlib import Path
+
+import mlflow
 from rich.console import Console
 
 CONSOLE = Console()
@@ -12,7 +12,7 @@ CONSOLE = Console()
 
 def parse_args():
     parser = ArgumentParser(prog='track experiments with mlflow tracking'
-                                 'https://mlflow.org/docs/latest/tracking.html')
+                            'https://mlflow.org/docs/latest/tracking.html')
     parser.add_argument(
         'experiment_name',
         help='name of experiment. Should correspond the model name')
@@ -20,26 +20,24 @@ def parse_args():
         'run_name',
         help='name of experiment run. Add thingsl ike hyperparameters here.')
     parser.add_argument('work_dir', help='dir where model files are stored')
-    parser.add_argument(
-        '--mlrun-dir',
-        default='./mlruns',
-        help='mlrun storage dir. Leave default.')
-    parser.add_argument(
-        '--data-dir',
-        default='mmaction2/data/phar/',
-        help='path to train/val/test dataset')
+    parser.add_argument('--mlrun-dir',
+                        default='./mlruns',
+                        help='mlrun storage dir. Leave default.')
+    parser.add_argument('--data-dir',
+                        default='mmaction2/data/phar/',
+                        help='path to train/val/test dataset')
     args = parser.parse_args()
     return args
 
 
 def get_train_val_acc(logs):
-    """ Get the validation & training accuracy from mmaction2 log files."""
+    """Get the validation & training accuracy from mmaction2 log files."""
 
     # specific to mmaction2 logs
     needles = ('Now best checkpoint is saved as', 'Evaluating top_k_accuracy')
     topk_length = 15
     # for train samples
-    look_back, n_back = 1700, 6
+    look_back, n_back = 1700, 7
 
     top_train = {f'top{k}': 0 for k in range(1, 6)}
     top_val = {f'top{k}': 0 for k in range(1, 6)}
@@ -57,7 +55,7 @@ def get_train_val_acc(logs):
             for i in range(1, 6):
                 t = f'top{i}'
                 sub_index = log[start:index].find(t)
-                topk = log[start+sub_index:start+sub_index+topk_length]
+                topk = log[start + sub_index:start + sub_index + topk_length]
                 topk = float(topk.split('acc')[1])
 
                 if topk > top_val[t] and t == 'top1':
@@ -71,24 +69,24 @@ def get_train_val_acc(logs):
             # train indexes start before needles[1]
             train_index = start
             # take average of last 5 readings
-            for row in log[train_index-look_back:train_index].split('\t'):
+            for row in log[train_index - look_back:train_index].split('\t'):
                 for i in range(1, 6):
                     t = f'top{i}'
                     sub_index = row.find(t)
                     if sub_index == -1:
                         break
 
-                    topk = row[sub_index:sub_index+topk_length]
+                    topk = row[sub_index:sub_index + topk_length]
                     topk = float(topk.split('acc: ')[1])
                     top_train[t] += topk
 
-            top_train = {k: round(v/n_back, 3) for k, v in top_train.items()}
+            top_train = {k: round(v / n_back, 3) for k, v in top_train.items()}
 
     return top_train, top_val
 
 
 def get_last_model(dir):
-    """ Get the latest checkpoint of a model."""
+    """Get the latest checkpoint of a model."""
     latest = osp.join(dir, 'latest.pth')
     if os.path.exists(latest):
         os.remove(osp.join(latest))
@@ -104,9 +102,11 @@ def get_top_model(dir):
 
 
 def find_artifact(dir, ext, hint=''):
-    """Given a folder, find files based on their extension and part of name"""
-    return [file for file in os.listdir(dir)
-            if (osp.splitext(file)[1] == ext and hint in file)]
+    """Given a folder, find files based on their extension and part of name."""
+    return [
+        file for file in os.listdir(dir)
+        if (osp.splitext(file)[1] == ext and hint in file)
+    ]
 
 
 def main():
@@ -120,15 +120,16 @@ def main():
     with mlflow.start_run(run_name=args.run_name):
         logs = []
         # log artifacts from work dir
-        for ext in ['.json', '.log', '.py', '.txt']:
+        for ext in ['.json', '.log', '.py', '.txt', '.pkl']:
             for artifact in find_artifact(args.work_dir, ext):
                 mlflow.log_artifact(osp.join(args.work_dir, artifact))
                 if ext == '.log':
                     with open(osp.join(args.work_dir, artifact), 'r') as f:
                         logs.append(f.read())
 
-        for artifact in find_artifact(args.data_dir, '.txt'):
-            mlflow.log_artifact(osp.join(args.data_dir, artifact))
+        for ext in ['.txt', '.pkl']:
+            for artifact in find_artifact(args.data_dir, ext):
+                mlflow.log_artifact(osp.join(args.data_dir, artifact))
 
         top_model = get_top_model(args.work_dir)
         if not top_model:
