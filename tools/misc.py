@@ -1,6 +1,7 @@
 import os
 import os.path as osp
 
+import numpy as np
 from rich.console import Console
 
 CONSOLE = Console()
@@ -22,6 +23,120 @@ CONSOLE = Console()
 # 12. extract_timestamps()
 
 
+def merge_pose(path, split, level=2):
+    """Given the pose estimation of single videos stored as dictionaries in.
+
+    .pkl format, merge them together and form a list of dictionaries.
+
+    Args:
+        path ([string]): path to the pose estimation for individual clips
+        split ([string]): train, val, test
+    """
+    import glob
+    import pickle
+
+    result = []
+    items = glob.glob(path + '/*' * level + '.pkl')
+
+    for item in items:
+        with open(item, 'rb') as f:
+            annotations = pickle.load(f)
+        result.append(annotations)
+    with open(f'kinesphere_{split}.pkl', 'wb') as out:
+        pickle.dump(result, out, protocol=pickle.HIGHEST_PROTOCOL)
+
+
+# merge_pose('mmaction2/data/phar/pose/train', 'train')
+
+# -----------------------------------------------------------------------------
+
+
+def filter_pose(path, thr=0.5):
+    """Filter Pose estimation based on threshold."""
+    import pickle
+    import mmcv
+
+    with open(path, 'rb') as f:
+        annotations = pickle.load(f)
+
+    CONSOLE.print(annotations['keypoint'].shape)
+
+    for person in [0, 1]:
+        for i in range(0, len(annotations['keypoint_score'][person])):
+            for j in range(0, 17):
+                if annotations['keypoint_score'][person][i][j] < thr:
+                    CONSOLE.print(annotations['keypoint'][person][i][j])
+                    annotations['keypoint'][person][i][j] = 0
+                    CONSOLE.print(annotations['keypoint'][person][i][j])
+
+    mmcv.dump(annotations, 'new.pkl')
+
+
+# filter_pose('demo/pose/blowjob.pkl')
+
+# -----------------------------------------------------------------------------
+
+
+def read_pickel(path):
+    import pickle
+    with open(path, 'rb') as f:
+        annotations = pickle.load(f)
+
+    if type(annotations) is list:
+        CONSOLE.print(f'Keys: {annotations[0].keys()}', style='green')
+        for ann in annotations:
+            CONSOLE.print(ann['label'])
+        # CONSOLE.print(annotations[0], style='green')
+    else:
+        f_no = len(annotations['keypoint'][0])
+        pos = int(f_no / 2)
+        CONSOLE.print(f'Keys: {annotations.keys()}', style='green')
+        CONSOLE.print(annotations['label'])
+        # pose estimation
+        CONSOLE.print(
+            annotations['keypoint'][0][pos],
+            style='green')  # keypoint[0] because there is only one person
+        # pose estimation confidence
+        CONSOLE.print(annotations['keypoint_score'][0][pos], style='green')
+
+        print('\n\n\n')
+        print(annotations)
+
+
+# read_pickel('mmaction2/data/phar/pose/kinesphere_train.pkl')
+
+
+def convert_pose_label(path,
+                       level=2,
+                       base_ann='resources/annotations/annotations.txt',
+                       pose_ann='resources/annotations/annotations_pose.txt'):
+    """Convert pose labels from the all-labels annotations to pose-only
+    annotations."""
+    import glob
+    import pickle
+    import mmcv
+    import utils as utils
+
+    base_ann = utils.annotations_list(base_ann)
+    pose_ann = utils.annotations_dic(pose_ann)
+    items = glob.glob(path + '/*' * level + '.pkl')
+
+    for item in items:
+        with open(item, 'rb') as f:
+            annotations = pickle.load(f)
+            try:
+                annotations['label'] = pose_ann[base_ann[annotations['label']]]
+            except KeyError as e:
+                CONSOLE.print(item, style='bold red')
+                CONSOLE.print(f'KeyError: {e}')
+                continue
+            mmcv.dump(annotations, item, protocol=pickle.HIGHEST_PROTOCOL)
+
+
+# convert_pose_label('mmaction2/data/phar/pose/val')
+
+
+# -----------------------------------------------------------------------------
 def merge_videos(*args):
     """Merge any number of videos."""
     import moviepy.editor as mpy
@@ -90,6 +205,33 @@ def merge_videos(*args):
 #     'mmaction2/data/phar/val/titjob/2C1I8400.mp4',
 #     'mmaction2/data/phar/val/titjob/5JEYD0CL.mp4',
 #     )
+
+# -----------------------------------------------------------------------------
+
+
+def rewritte_video(video):
+    import cv2
+
+    CONSOLE.print(f'Rewritting {video}', style='green')
+    video = cv2.VideoCapture(video)
+    video_writer = cv2.VideoWriter(
+        'out.mp4', cv2.VideoWriter_fourcc(*'MP4V'),
+        video.get(cv2.CAP_PROP_FPS),
+        (round(video.get(cv2.CAP_PROP_FRAME_WIDTH)),
+         round(video.get(cv2.CAP_PROP_FRAME_HEIGHT))))
+
+    while cv2.waitKey(1) < 0:
+        success, frame = video.read()
+        if not success:
+            video.release()
+            break
+
+        video_writer.write(frame.astype(np.uint8))
+
+
+# rewritte_video('demo/kinesphere/1s-window/2s-train_48-frames_Kinesphäre_alle_impro_CS.mp4')
+
+# -----------------------------------------------------------------------------
 
 
 def extract_timestamps(path):
@@ -179,7 +321,7 @@ def extract_subclip(video, start, finish):
             CONSOLE.print(log, style='bold red')
 
 
-extract_subclip('dataset_2/313.mp4', 345, None)
+extract_subclip('dataset_2/481.mp4', 0, 300)
 
 
 # -----------------------------------------------------------------------------
@@ -285,86 +427,6 @@ def extract_frames_from_video(video_path, pos=0, dims=None):
 
 # for i in np.arange(10, 20, 1):
 #     extract_frames_from_video('thesis-har/tsn_gradcam.mp4', i)
-
-# -----------------------------------------------------------------------------
-
-
-def merge_pose(path, split):
-    """Given the pose estimation of single videos stored as dictionaries in.
-
-    .pkl format, merge them together and form a list of dictionaries.
-
-    Args:
-        path ([string]): path to the pose estimation for individual clips
-        split ([string]): train, val, test
-    """
-    import os
-    import os.path as osp
-    import pickle
-    result = []
-    for ann in os.listdir(path):
-        if ann.endswith('.pkl'):
-            with open(osp.join(path, ann), 'rb') as f:
-                annotations = pickle.load(f)
-        result.append(annotations)
-    with open(f'bast_{split}.pkl', 'wb') as out:
-        pickle.dump(result, out, protocol=pickle.HIGHEST_PROTOCOL)
-
-
-# merge_pose('minio-transfer/read/pkl', 'train')
-# -----------------------------------------------------------------------------
-
-
-def filter_pose(path, thr=0.5):
-    """Filter Pose estimation based on threshold."""
-    import pickle
-    import mmcv
-
-    with open(path, 'rb') as f:
-        annotations = pickle.load(f)
-
-    CONSOLE.print(annotations['keypoint'].shape)
-
-    for person in [0, 1]:
-        for i in range(0, len(annotations['keypoint_score'][person])):
-            for j in range(0, 17):
-                if annotations['keypoint_score'][person][i][j] < thr:
-                    CONSOLE.print(annotations['keypoint'][person][i][j])
-                    annotations['keypoint'][person][i][j] = 0
-                    CONSOLE.print(annotations['keypoint'][person][i][j])
-
-    mmcv.dump(annotations, 'new.pkl')
-
-
-# filter_pose('demo/pose/blowjob.pkl')
-
-# -----------------------------------------------------------------------------
-
-
-def read_pickel(path):
-    import pickle
-    with open(path, 'rb') as f:
-        annotations = pickle.load(f)
-
-    if type(annotations) is list:
-        CONSOLE.print(f'Keys: {annotations[0].keys()}', style='green')
-        CONSOLE.print(annotations[0], style='green')
-    else:
-        f_no = len(annotations['keypoint'][0])
-        pos = int(f_no / 2)
-        CONSOLE.print(f'Keys: {annotations.keys()}', style='green')
-        # pose estimation
-        CONSOLE.print(
-            annotations['keypoint'][0][pos],
-            style='green')  # keypoint[0] because there is only one person
-        # pose estimation confidence
-        CONSOLE.print(annotations['keypoint_score'][0][pos], style='green')
-
-        print('\n\n\n')
-        print(annotations)
-
-
-# read_pickel('demo/pose/5HE6T27B.pkl')
 
 # -----------------------------------------------------------------------------
 
