@@ -64,12 +64,17 @@ def extract_frame(video_path):
     return frame_paths, first_frame.shape[:2]
 
 
-def detection_inference(args, frame_paths):
-    model = init_detector(args.det_config, args.det_checkpoint, args.device)
+def detection_inference(args, frame_paths, det_model=None):
+    if det_model is None:
+        model = init_detector(args.det_config, args.det_checkpoint,
+                              args.device)
+    else:
+        model = det_model
     assert model.CLASSES[0] == 'person', ('We require you to use a detector '
                                           'trained on COCO')
     results = []
-    CONSOLE.print('Performing Human Detection for each frame', style='green')
+    CONSOLE.print('Performing Human Detection for each frame...',
+                  style='green')
     prog_bar = mmcv.ProgressBar(len(frame_paths))
     for frame_path in frame_paths:
         result = inference_detector(model, frame_path)
@@ -297,10 +302,13 @@ def det_postproc(det_results, vid):
         return bboxes2bbox(det_results, len(det_results))
 
 
-def pose_inference(args, frame_paths, det_results):
-    model = init_pose_model(args.pose_config, args.pose_checkpoint,
-                            args.device)
-    CONSOLE.print('Performing Human Pose Estimation for each frame',
+def pose_inference(args, frame_paths, det_results, pose_model=None):
+    if pose_model is None:
+        model = init_pose_model(args.pose_config, args.pose_checkpoint,
+                                args.device)
+    else:
+        model = pose_model
+    CONSOLE.print('Performing Human Pose Estimation for each frame...',
                   style='green')
     prog_bar = mmcv.ProgressBar(len(frame_paths))
 
@@ -318,11 +326,11 @@ def pose_inference(args, frame_paths, det_results):
     return kp
 
 
-def pose_extraction(vid, thr=None):
+def pose_extraction(vid, thr=None, det_model=None, pose_model=None):
     frame_paths, img_shape = extract_frame(vid)
-    det_results = detection_inference(args, frame_paths)
+    det_results = detection_inference(args, frame_paths, det_model)
     det_results = det_postproc(det_results, vid)
-    pose_results = pose_inference(args, frame_paths, det_results)
+    pose_results = pose_inference(args, frame_paths, det_results, pose_model)
     anno = dict()
     anno['keypoint'] = pose_results[..., :2]
     anno['keypoint_score'] = pose_results[..., 2]
@@ -343,11 +351,14 @@ def pose_extraction(vid, thr=None):
                     anno['keypoint'][k][i][j] = 0
                     count_0 += 1
 
-    incorrect_rate = round(100 * count_0 / (n_person * n_frames * 17), 2)
-    CONSOLE.print(f'\n{incorrect_rate}% of poses are incorect', style='yellow')
+    correct_rate = 1 - round(count_0 / (n_person * n_frames * 17), 3)
+    CONSOLE.print(
+        f'\n{100*correct_rate}% of poses have a threshold higher '
+        f'than {thr}',
+        style='yellow')
     shutil.rmtree(osp.dirname(frame_paths[0]))
 
-    return anno, incorrect_rate
+    return anno, correct_rate
 
 
 def parse_args():
@@ -367,17 +378,39 @@ def parse_args():
                         type=float,
                         default=0.5,
                         help='pose estimation score threshold')
-    parser.add_argument('--incorrect-thr',
-                        type=int,
-                        default=50,
-                        help=('if > X% of poses have a lower confidence'
-                              ' than `poses-score-thr`, do not save the clip'))
+    parser.add_argument('--correct-rate',
+                        type=float,
+                        default=0.5,
+                        help=('if less than this rate of frame poses have a '
+                              'lower confidence than `poses-score-thr`, do not'
+                              'save the pkl result'))
     parser.add_argument('--device', type=str, default='cuda:0')
     args = parser.parse_args()
     return args
 
 
-def main():
+def main(sub_args, det_model=None, pose_model=None):
+    out = osp.join(sub_args.out_dir,
+                   osp.splitext(sub_args.video.split('/')[-1])[0]) + '.pkl'
+    if osp.exists(out):
+        CONSOLE.print(f'{out} exists. Skipping...', style='yellow')
+        return
+
+    global ANN_TO_INDEX, args
+    args = sub_args
+    ANN_TO_INDEX = utils.annotations_dic(args.ann)
+    anno, correct_rate = pose_extraction(args.video, args.pose_score_thr,
+                                         det_model, pose_model)
+
+    # save poses if they don't have more than `args.incorrect_thr %` of poses
+    # with a lower confidence than `args.poses_score_thr`
+    if correct_rate > args.correct_rate:
+        mmcv.dump(anno, out)
+
+    return correct_rate
+
+
+if __name__ == '__main__':
     logging.basicConfig(filename='pose_extraction.log', level=logging.DEBUG)
     global_args = parse_args()
     args.device = global_args.device
@@ -386,22 +419,5 @@ def main():
     args.det_score_thr = global_args.det_score_thr
     args.pose_score_thr = global_args.pose_score_thr
     args.ann = global_args.ann
-    args.incorrect_thr = global_args.incorrect_thr
-    out = osp.join(args.out_dir,
-                   osp.splitext(args.video.split('/')[-1])[0]) + '.pkl'
-    if osp.exists(out):
-        CONSOLE.print(f'{out} exists. Skipping...', style='yellow')
-        return
-
-    global ANN_TO_INDEX
-    ANN_TO_INDEX = utils.annotations_dic(args.ann)
-    anno, incorrect_rate = pose_extraction(args.video, args.pose_score_thr)
-
-    # save poses if they don't have more than `args.incorrect_thr %` of poses
-    # with a lower confidence than `args.poses_score_thr`
-    if incorrect_rate < args.incorrect_thr:
-        mmcv.dump(anno, out)
-
-
-if __name__ == '__main__':
-    main()
+    args.correct_rate = global_args.correct_rate
+    main(args)

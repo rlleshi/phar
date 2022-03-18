@@ -21,6 +21,15 @@ def pose_feasibility(cat):
 
 
 def extract_audio(in_dir, out_dir):
+    """Scheduler to extract audio from videos_val.
+
+    Args:
+        in_dir (_type_): _description_
+        out_dir (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
     import time
     script_dir = '/mmaction2/tools/data/extract_audio.py'
     for dIr in os.listdir(in_dir):
@@ -39,6 +48,15 @@ def extract_audio(in_dir, out_dir):
 
 
 def extract_audio_feature(in_dir, out_dir):
+    """Extract spectogram features from audio.
+
+    Args:
+        in_dir (_type_): _description_
+        out_dir (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
     script_dir = '/mmaction2/tools/data/build_audio_features.py'
     for dIr in os.listdir(in_dir):
         dir_path = osp.join(in_dir, dIr)
