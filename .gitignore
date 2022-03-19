@@ -140,3 +140,4 @@ mlruns/
 demo/
 demo/subclip_276.mp4
 annotator/via-3.0.11/
+checkpoints/

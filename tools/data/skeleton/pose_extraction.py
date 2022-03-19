@@ -291,6 +291,11 @@ def det_postproc(det_results, vid):
             # * return det_results - specific to the NTU dataset
 
     # * n_person = 2
+
+    if len(tracklets) == 0:
+        # no bboxes found at all
+        return []
+
     if len(tracklets) <= 2:
         tracklets = list(tracklets.values())
         bboxes = []
@@ -330,6 +335,10 @@ def pose_extraction(vid, thr=None, det_model=None, pose_model=None):
     frame_paths, img_shape = extract_frame(vid)
     det_results = detection_inference(args, frame_paths, det_model)
     det_results = det_postproc(det_results, vid)
+    if not det_results:
+        CONSOLE.print(f'No bounding boxes found for {vid}.', style='yellow')
+        sys.exit(1)
+
     pose_results = pose_inference(args, frame_paths, det_results, pose_model)
     anno = dict()
     anno['keypoint'] = pose_results[..., :2]
