@@ -335,7 +335,7 @@ def pose_extraction(vid, thr=None, det_model=None, pose_model=None):
     frame_paths, img_shape = extract_frame(vid)
     det_results = detection_inference(args, frame_paths, det_model)
     det_results = det_postproc(det_results, vid)
-    if not det_results:
+    if 0 == len(det_results):
         CONSOLE.print(f'No bounding boxes found for {vid}.', style='yellow')
         sys.exit(1)
 
