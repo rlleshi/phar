@@ -6,21 +6,31 @@ from rich.console import Console
 
 CONSOLE = Console()
 
-# Methods:
-# 1. long_video_demo
-# 2. merge_train_test() - merges train & test sets from the BAST dataset
-# 3. read_pickel() - reads and examines pose-estimation pickle files
-# 4. merge_pose() - merges individual pose data into a list of dictionaries
+# Methods overview:
 #
-# 5. extract_frames_from_video() - extract frames of choice from videos
-# 6. merge_images_with_font() - merges several images into one
-# 7. gen_id() - generate some random id
+# 1. Pose Stuff
+#   1.1 merge_pose(): merges poses in a single list of dicts
+#   1.2 filter_pose(): filter pose estimation based on threshold
+#   1.3 read_pickel(): examines the pose information
+#   1.4 convert_pose_label(): e.g. from (general) annotations.txt to pose_ann
 #
-# 8. download_youtube() - download single youtube video
-# 9. resize() - resize an image
-# 10. demo_posec3d()
-# 11. extract subclip() - extract sublicp from video
-# 12. extract_timestamps()
+# 2. Video Manipulation
+#   2.1 merge_videos(): with MoviePy
+#   2.2 resize(): resize videos using MoviePy
+#   2.3 extract_subclip(): extract a subclip from a video
+#   2.4 extract_frames_from_video(): extract frame from a video
+#
+# 3. Miscellaneous
+#   3.1 gen_id(): generates a 'random' ID
+#   3.2 resize_img(): resizes an image using MoviePy
+#   3.3 download_youtube(): downloads youtube video
+#   3.4 extract_timestamps(): annotation timestamp extraction based on VIA
+#   3.5 merge_images_with_font(): merge images and add fonts to them
+#   3.6 long_video_demo(): based on MMAction2
+#   3.7 demo_posec3d(): based on MMaction2
+#
+# 4. Obscure
+#   4.1 merge_train_test()
 
 
 def merge_pose(path, split, level=2):
@@ -47,12 +57,15 @@ def merge_pose(path, split, level=2):
 
 
 # merge_pose('mmaction2/data/phar/pose/train', 'train')
-
 # -----------------------------------------------------------------------------
 
 
 def filter_pose(path, thr=0.5):
-    """Filter Pose estimation based on threshold."""
+    """Filter Pose estimation based on threshold.
+
+    If the confidence is less than `thr`, make the corresponding pose
+    prediction 0.
+    """
     import pickle
     import mmcv
 
@@ -73,11 +86,15 @@ def filter_pose(path, thr=0.5):
 
 
 # filter_pose('demo/pose/blowjob.pkl')
-
 # -----------------------------------------------------------------------------
 
 
 def read_pickel(path):
+    """Just a method to examine pose information :)
+
+    Args:
+        path (_type_): _description_
+    """
     import pickle
     with open(path, 'rb') as f:
         annotations = pickle.load(f)
@@ -104,6 +121,7 @@ def read_pickel(path):
 
 
 # read_pickel('mmaction2/data/phar/pose/kinesphere_train.pkl')
+# -----------------------------------------------------------------------------
 
 
 def convert_pose_label(path,
@@ -111,7 +129,12 @@ def convert_pose_label(path,
                        base_ann='resources/annotations/annotations.txt',
                        pose_ann='resources/annotations/annotations_pose.txt'):
     """Convert pose labels from the all-labels annotations to pose-only
-    annotations."""
+    annotations.
+
+    In the unfortunate case that you generated the pose dataset based on the
+    general annotations instead of the pose annotations.
+    """
+
     import glob
     import pickle
     import mmcv
@@ -134,11 +157,11 @@ def convert_pose_label(path,
 
 
 # convert_pose_label('mmaction2/data/phar/pose/val')
-
-
 # -----------------------------------------------------------------------------
+
+
 def merge_videos(*args):
-    """Merge any number of videos."""
+    """Merge any number of videos using moviepy."""
     import moviepy.editor as mpy
     clips = [mpy.VideoFileClip(clip) for clip in args]
     result = mpy.concatenate_videoclips(clips, method='compose')
@@ -148,68 +171,17 @@ def merge_videos(*args):
 
 # merge_videos(
 #     'mmaction2/data/phar/val/69/0B6U5LKR.mp4',
-#     'mmaction2/data/phar/val/69/7CZ373D8.mp4',
-#     'mmaction2/data/phar/val/69/JBZ36GU5.mp4',
-#     'mmaction2/data/phar/val/anal/6VC3J40F.mp4',
-#     'mmaction2/data/phar/val/anal/8OHAHG9Y.mp4',
-#     'mmaction2/data/phar/val/anal/485813HJ.mp4',
-#     'mmaction2/data/phar/val/anal/FJS7X9LC.mp4',
-#     'mmaction2/data/phar/val/blowjob/0E2A2FFD.mp4',
-#     'mmaction2/data/phar/val/blowjob/4KZNUT2G.mp4',
-#     'mmaction2/data/phar/val/blowjob/570D27HE.mp4',
-#     'mmaction2/data/phar/val/blowjob/6KPG2ANV.mp4',
-#     'mmaction2/data/phar/val/cowgirl/0K01XBXN.mp4',
-#     'mmaction2/data/phar/val/cowgirl/3KFGRGRB.mp4',
-#     'mmaction2/data/phar/val/cowgirl/3PO6E8OY.mp4',
-#     'mmaction2/data/phar/val/cowgirl/8WLQY0B8.mp4',
-#     'mmaction2/data/phar/val/creampie/14BUOIXZ.mp4',
-#     'mmaction2/data/phar/val/creampie/HCEETXQG.mp4',
-#     'mmaction2/data/phar/val/creampie/HPSU0L7T.mp4',
-#     'mmaction2/data/phar/val/cumshot/0S6M7XKP.mp4',
-#     'mmaction2/data/phar/val/cumshot/1J2J0NZM.mp4',
-#     'mmaction2/data/phar/val/cumshot/5ZPG3KRC.mp4',
-#     'mmaction2/data/phar/val/cunnilingus/0EG1OBFE.mp4',
-#     'mmaction2/data/phar/val/cunnilingus/1HO1OZ26.mp4',
-#     'mmaction2/data/phar/val/cunnilingus/6UF3OT8N.mp4',
-#     'mmaction2/data/phar/val/deepthroat/0C0MQ82H.mp4',
-#     'mmaction2/data/phar/val/deepthroat/5C9QXF4E.mp4',
-#     'mmaction2/data/phar/val/deepthroat/ASQBFMHL.mp4',
-#     'mmaction2/data/phar/val/deepthroat/B3M9WEEQ.mp4',
-#     'mmaction2/data/phar/val/doggy/0QWXKEFU.mp4',
-#     'mmaction2/data/phar/val/doggy/3TPCR53P.mp4',
-#     'mmaction2/data/phar/val/doggy/4N4AMT87.mp4',
-#     'mmaction2/data/phar/val/facial_cumshot/0IGDHH6Y.mp4',
-#     'mmaction2/data/phar/val/facial_cumshot/1T497O83.mp4',
-#     'mmaction2/data/phar/val/facial_cumshot/CJZ8I894.mp4',
-#     'mmaction2/data/phar/val/facial_cumshot/HCBMODR7.mp4',
-#     'mmaction2/data/phar/val/fingering/0TTEZU3F.mp4',
-#     'mmaction2/data/phar/val/fingering/1DDCDOUM.mp4',
-#     'mmaction2/data/phar/val/fingering/09Y3SMKW.mp4',
-#     'mmaction2/data/phar/val/fondling/0RJ0V1YW.mp4',
-#     'mmaction2/data/phar/val/fondling/HMQ6S8PD.mp4',
-#     'mmaction2/data/phar/val/fondling/IK9DHY7N.mp4',
-#     'mmaction2/data/phar/val/fondling/IYWFQCJA.mp4',
-#     'mmaction2/data/phar/val/handjob/0ACBVTAD.mp4',
-#     'mmaction2/data/phar/val/handjob/4M5LX4XS.mp4',
-#     'mmaction2/data/phar/val/handjob/5CEW1B68.mp4',
-#     'mmaction2/data/phar/val/kissing/ZTLD813G.mp4',
-#     'mmaction2/data/phar/val/kissing/ZXUH0BNV.mp4',
-#     'mmaction2/data/phar/val/kissing/QP2QNG5R.mp4',
-#     'mmaction2/data/phar/val/scoop_up/1IAAN8P0.mp4',
-#     'mmaction2/data/phar/val/scoop_up/6W37GBZX.mp4',
-#     'mmaction2/data/phar/val/scoop_up/FPL82U0N.mp4',
-#     'mmaction2/data/phar/val/the_snake/0DTFFLBY.mp4',
-#     'mmaction2/data/phar/val/the_snake/6RWW8G0Y.mp4',
-#     'mmaction2/data/phar/val/the_snake/7CBJ911N.mp4',
-#     'mmaction2/data/phar/val/titjob/1N65GLEE.mp4',
-#     'mmaction2/data/phar/val/titjob/2C1I8400.mp4',
-#     'mmaction2/data/phar/val/titjob/5JEYD0CL.mp4',
 #     )
-
 # -----------------------------------------------------------------------------
 
 
 def rewritte_video(video):
+    """Simply rewritte a video using OpenCv. Sometimes moviepy writes a video
+    with bugs. Simply rewriting it might fix the problem.
+
+    Args:
+        video (str): video path
+    """
     import cv2
 
     CONSOLE.print(f'Rewritting {video}', style='green')
@@ -230,35 +202,6 @@ def rewritte_video(video):
 
 
 # rewritte_video('demo/kinesphere/1s-window/2s-train_48-frames_Kinesphäre_alle_impro_CS.mp4')
-
-# -----------------------------------------------------------------------------
-
-
-def extract_timestamps(path):
-    """Extract timestamps from csv file based on via structure."""
-    import pandas as pd
-
-    result = []
-    df = pd.read_csv(path)
-
-    for i in range(1, len(df)):
-        temp = str(df.iloc[i].value_counts()).split(' ')
-        result.append({
-            'action':
-            temp[0].split(':"')[1].strip('}"'),
-            'video':
-            ''.join(list(filter(lambda x: x not in '["],', temp[6]))),
-            'start':
-            float(temp[7][:-1]),
-            'end':
-            float(temp[8][:-2])
-        })
-
-    CONSOLE.print(result)
-
-
-# extract_timestamps('dataset/265.csv')
-
 # -----------------------------------------------------------------------------
 
 
@@ -300,12 +243,12 @@ def resize(file, height=None, width=None, rate=None):
 
 
 # resize('subclip_demo.mp4', width=720)
-
 # -----------------------------------------------------------------------------
 
 
 def extract_subclip(video, start, finish):
-    """Extract subclip from video."""
+    """Extract subclip from a video using moviepy."""
+
     import moviepy.editor as mpy
     CONSOLE.print('Writing video...', style='green')
 
@@ -321,12 +264,34 @@ def extract_subclip(video, start, finish):
             CONSOLE.print(log, style='bold red')
 
 
-extract_subclip('dataset_2/481.mp4', 0, 300)
-
-
+# extract_subclip('dataset_2/296.mp4', 241, None)
 # -----------------------------------------------------------------------------
+
+
+def extract_frames_from_video(video_path, pos=0, dims=None):
+    """Extract frames at a given position of a video using moviepy `dims` is a
+    tuple containing width and height."""
+
+    from moviepy.editor import VideoFileClip
+    from moviepy.video.fx.resize import resize
+
+    with VideoFileClip(video_path) as video:
+        print(f'Video FPS: {video.fps}')
+        frame = video.to_ImageClip(pos)
+    if dims is not None:
+        frame = resize(frame, dims)
+
+    frame.save_frame(f'{pos}_{gen_id(4)}.jpg')
+
+
+# for i in np.arange(10, 20, 1):
+#     extract_frames_from_video('thesis-har/tsn_gradcam.mp4', i)s
+# -----------------------------------------------------------------------------
+
+
 def gen_id(size=8):
     """Generate a random id."""
+
     import string
     import random
     chars = string.ascii_uppercase + string.digits
@@ -334,31 +299,75 @@ def gen_id(size=8):
 
 
 # -----------------------------------------------------------------------------
+
+
 def resize_img(img, shape=(480, 480)):
+    """Resizes image with moviepy.
+
+    Args:
+        img (_type_): _description_
+        shape (tuple, optional): _description_. Defaults to (480, 480).
+    """
     from moviepy.editor import ImageClip
     ImageClip(img).resize(shape).save_frame(f'{gen_id(4)}.jpg')
 
 
 # resize('subclip_demo.mp4', (320, 320))
-
-
 # -----------------------------------------------------------------------------
+
+
 def download_youtube(link):
+    """Downloads a video from Youtube.
+
+    Args:
+        link (_type_): _description_
+    """
     from pytube import YouTube
     YouTube(link).streams.first().download()
 
 
 # download_youtube('https://www.youtube.com/watch?v=notLDzBJ2mg&t=66s')
-
-
 # -----------------------------------------------------------------------------
+
+
+def extract_timestamps(path):
+    """Extract timestamps from csv file based on VIA structure."""
+    import pandas as pd
+
+    result = []
+    df = pd.read_csv(path)
+
+    for i in range(1, len(df)):
+        temp = str(df.iloc[i].value_counts()).split(' ')
+        result.append({
+            'action':
+            temp[0].split(':"')[1].strip('}"'),
+            'video':
+            ''.join(list(filter(lambda x: x not in '["],', temp[6]))),
+            'start':
+            float(temp[7][:-1]),
+            'end':
+            float(temp[8][:-2])
+        })
+
+    CONSOLE.print(result)
+
+
+# extract_timestamps('dataset/265.csv')
+# -----------------------------------------------------------------------------
+
+
 def merge_images_with_font(*args,
                            cols=2,
                            label_rgb=(204, 204, 0),
                            label_pos=(50, 0),
                            font_size=40):
     """Merge two or more images of same size into one based on #cols using
-    Pillow True Type Fonts: https://ttfonts.net."""
+    Pillow True Type Fonts: https://ttfonts.net.
+
+    Used in thesis (in case u need examples)
+    """
+
     from PIL import Image, ImageOps, ImageFont, ImageDraw
     import math
 
@@ -406,33 +415,15 @@ def merge_images_with_font(*args,
 #     'thesis/tsn 3.jpg',
 #     cols=3,
 #     label_rgb=(0, 255, 255), font_size=20, label_pos=(170, 0))
-
 # -----------------------------------------------------------------------------
 
 
-def extract_frames_from_video(video_path, pos=0, dims=None):
-    """Extract frames at a given position of a video using moviepy `dims` is a
-    tuple containing width and height."""
-    from moviepy.editor import VideoFileClip
-    from moviepy.video.fx.resize import resize
-
-    with VideoFileClip(video_path) as video:
-        print(f'Video FPS: {video.fps}')
-        frame = video.to_ImageClip(pos)
-    if dims is not None:
-        frame = resize(frame, dims)
-
-    frame.save_frame(f'{pos}_{gen_id(4)}.jpg')
-
-
-# for i in np.arange(10, 20, 1):
-#     extract_frames_from_video('thesis-har/tsn_gradcam.mp4', i)
-
-# -----------------------------------------------------------------------------
-
-
-# * Merge train & test set FROM BAST dataset
 def merge_train_test(path):
+    """Merge train & test set FROM BAST dataset.
+
+    Args:
+        path (_type_): _description_
+    """
     import os
     import shutil
     import os.path as osp
@@ -469,7 +460,6 @@ def merge_train_test(path):
 
 
 # merge_train_test('minio-transfer/read/tanz')
-
 # -----------------------------------------------------------------------------
 
 
@@ -504,6 +494,9 @@ def long_video_demo():
         subprocess.run(subargs)
 
 
+# -----------------------------------------------------------------------------
+
+
 def demo_posec3d(path):
     import subprocess
     import os
@@ -534,3 +527,6 @@ def demo_posec3d(path):
             'cuda:0'
         ]
         subprocess.run(subargs)
+
+
+# -----------------------------------------------------------------------------
