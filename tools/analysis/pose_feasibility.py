@@ -23,6 +23,7 @@ except ImportError:
 
 CONSOLE = Console()
 POSE_EXTR_PATH = 'tools/data/skeleton/pose_extraction.py'
+PROGRESS_FILE = 'pose_feasibility_progress.txt'
 
 
 def parse_args():
@@ -48,6 +49,9 @@ def parse_args():
                         type=float,
                         default=0.6,
                         help='pose estimation score threshold')
+    parser.add_argument('--resume',
+                        action='store_true',
+                        help='ggf. resume analysis from previous run')
     parser.add_argument('--device', default='cuda:0', help='device')
     parser.add_argument(
         '--det-config',
@@ -74,21 +78,22 @@ def get_pose(args, d_model, p_model):
     """Perform pose estimation given a video.
 
     Args:
-        video (str): path to video
-        out_dir (str): out dir
-        args (ArgumentParser): script args
+        args (dict): parsed args
         d_model: detection model
         p_model: pose model
 
     Returns:
-        int: incorrect poses rate
+        int: correct poses rate
     """
     return pose_extraction.main(args, d_model, p_model)
 
 
 def main():
     args = parse_args()
-    # how many clips have X% of poses wrong
+    # percentiles of clips having correct poses:
+    # for a certain percentile it means: {n_videos_in_percentile / total_vids}
+    # have {percentile %} of their poses with a confidence higher than
+    # {args.pose_score_thr}
     results = {k: 0 for k in range(0, 101, 10)}
     det_model = init_detector(args.det_config, args.det_checkpoint,
                               args.device)
@@ -103,6 +108,17 @@ def main():
     sub_args.ann = args.ann
     sub_args.correct_rate = 0.5
 
+    resume_list = []
+    if args.resume:
+        if osp.exists(PROGRESS_FILE):
+            with open(PROGRESS_FILE, 'r') as resume_from:
+                resume_list = resume_from.readlines()[0].split(',')
+        else:
+            CONSOLE.print(
+                f'Resume option selected but {PROGRESS_FILE} not'
+                ' found.',
+                style='yellow')
+
     for split in args.splits:
         out_dir = osp.join(args.out_dir, split, args.label)
         in_dir = osp.join(args.src_dir, split, args.label)
@@ -110,12 +126,24 @@ def main():
         sub_args.out_dir = out_dir
 
         for clip in tqdm(os.listdir(in_dir)):
-            sub_args.video = osp.join(in_dir, clip)
-            result = 100 * get_pose(sub_args, det_model, pose_model)
+            if clip in resume_list:
+                CONSOLE.print(f'Already processed. Skipping {clip}.',
+                              style='green')
+                continue
 
+            sub_args.video = osp.join(in_dir, clip)
+            result = get_pose(sub_args, det_model, pose_model)
+            if result is None:
+                CONSOLE.print(f'{clip} already exists. Skipping.',
+                              style='green')
+                continue
+
+            result *= 100
             for k in results.keys():
                 if result > k:
                     results[k] += 1
+            with open(PROGRESS_FILE, 'a+') as out:
+                out.write(f'{clip},')
 
     # plot
     df = pd.DataFrame({

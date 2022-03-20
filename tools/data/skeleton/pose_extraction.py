@@ -337,7 +337,7 @@ def pose_extraction(vid, thr=None, det_model=None, pose_model=None):
     det_results = det_postproc(det_results, vid)
     if 0 == len(det_results):
         CONSOLE.print(f'No bounding boxes found for {vid}.', style='yellow')
-        sys.exit(1)
+        return None, None
 
     pose_results = pose_inference(args, frame_paths, det_results, pose_model)
     anno = dict()
@@ -410,6 +410,8 @@ def main(sub_args, det_model=None, pose_model=None):
     ANN_TO_INDEX = utils.annotations_dic(args.ann)
     anno, correct_rate = pose_extraction(args.video, args.pose_score_thr,
                                          det_model, pose_model)
+    if anno is None and correct_rate is None:
+        return 0
 
     # save poses if they don't have more than `args.incorrect_thr %` of poses
     # with a lower confidence than `args.poses_score_thr`
