@@ -30,7 +30,13 @@ def gen_id(size=8):
     return ''.join(random.choice(chars) for _ in range(size))
 
 
-def generate_structure(out_dir, annotations):
+def generate_structure(out_dir: str, annotations: str):
+    """Generate the videos dataset structure.
+
+    Args:
+        out_dir (str): directory to generate structure for
+        annotations (str): path to annotation file that has classes
+    """
     classes = utils.annotations_list(annotations)
     Path(out_dir).mkdir(parents=True, exist_ok=True)
 
@@ -41,7 +47,18 @@ def generate_structure(out_dir, annotations):
         open(osp.join(out_dir, f'{split}.txt'), 'w').close()
 
 
-def get_video_annotation(id, anns):
+def get_video_annotation(id: int, anns: list) -> str:
+    """Gets the annotation for a video based on its id. The assumption here is
+    that both the video and its corresponding annotation have been named with a
+    number.
+
+    Args:
+        id (int): video id
+        anns (list): list of annotation paths
+
+    Returns:
+        ann (str): path to annotations
+    """
     return (ann for ann in anns if ann.split(osp.sep)[-1][:-4] == id)
 
 
@@ -53,7 +70,7 @@ def parse_args():
                         help='source video directory')
     parser.add_argument('--ann',
                         type=str,
-                        default='resources/annotations.txt',
+                        default='resources/annotations/annotations.txt',
                         help='annotation file')
     parser.add_argument('--out_dir',
                         default='mmaction2/data/phar',
@@ -63,12 +80,10 @@ def parse_args():
                         nargs='+',
                         default=[0.7, 0.15, 0.15],
                         help='train/val/test split')
-    parser.add_argument(
-        # TODO: default 7
-        '--clip-len',
-        type=int,
-        default=10,
-        help='length of each clip')
+    parser.add_argument('--clip-len',
+                        type=int,
+                        default=7,
+                        help='length of each clip')
     parser.add_argument('--num-processes',
                         type=int,
                         default=(cpu_count() - 2 or 1),
@@ -77,24 +92,42 @@ def parse_args():
                         type=int,
                         default=1,
                         choices=[1, 2],
-                        help='directory level of data')
+                        help='directory level to find videos')
     args = parser.parse_args()
     return args
 
 
-def write_annotation(path):
-    """Write the corresponding annotation to the annotation file."""
+def write_annotation(path: str):
+    """Write the corresponding annotation to the annotation file. The
+    annotation consists of the path to the video + label number.
+
+      `mmaction2/data/temp/train/the_snake/DOZ9WC51.mp4 9`
+
+    Args:
+        path (str): path to the clip
+    """
     path_to_ann_f, label = osp.split(osp.dirname(path))
     with open(f'{path_to_ann_f}.txt', 'a') as out:
         out.write(f'{path} {ANN_TO_INDEX[label]}')
         out.write('\n')
 
 
-def get_actions_with_timestamps(path):
+def get_actions_with_timestamps(path: str) -> list:
     """Given the path to a csv file, get its timestamps.
 
-    The function is specific to the temporal csv annotations produced by the
-    VIA annotator.
+    This function is specific to the temporal csv annotations
+    produced by the VIA annotator:
+
+    `Show/Hide attribute editor` -> Add `Activity`
+        Name: "Activity";
+        Anchor: "Temporal Segment in Video or Audio";
+        Description: "Activity"
+
+    Args:
+        path (str): path to annotation
+
+    Returns:
+        list: list of timestamps
     """
     results = []
     df = pd.read_csv(path)
@@ -123,8 +156,8 @@ def extract_clips(items):
         CONSOLE.print(f'Video {video_f} has no annotations.', style='yellow')
         return
 
-    # TODO: take clip length from args
-    clip_len, min_remainder = 9, 5
+    clip_len = args.clip_len
+    min_remainder = clip_len / 2  # ggf. overlap
     np.random.seed()
     split = np.random.choice(['train', 'val', 'test'], p=args.split)
     video = mpy.VideoFileClip(video_f)
@@ -138,9 +171,10 @@ def extract_clips(items):
             continue
 
         label = action['action'].replace('-', '_')
-        # skip video if its not part of annotations
+
         if ANN_TO_INDEX.get(label, None) is None:
-            return
+            # skip if label not found
+            continue
 
         n_clips = int(duration / clip_len)
         remainder = duration % clip_len
@@ -159,6 +193,7 @@ def extract_clips(items):
                 continue
 
         if remainder >= min_remainder:
+            # small overlap will exist, but we savor`min_remainder` footage
             out_f = f'{osp.join(args.out_dir, split, label, gen_id())}.mp4'
             subclip = video.subclip(action['end'] - clip_len, action['end'])
             try:
@@ -172,6 +207,7 @@ def extract_clips(items):
 def main():
     args = parse_args()
     assert sum(args.split) == 1, 'train/val/test split must equal to 1'
+    assert osp.exists(args.ann), 'provide label map file'
     generate_structure(args.out_dir, args.ann)
     global ANN_TO_INDEX
     ANN_TO_INDEX = utils.annotations_dic(args.ann)
