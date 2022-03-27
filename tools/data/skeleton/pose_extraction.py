@@ -34,7 +34,7 @@ args.det_checkpoint = 'https://download.openmmlab.com/mmdetection/v2.0/faster_rc
 args.pose_config = f'{MMPOSE_ROOT}/configs/body/2d_kpt_sview_rgb_img/topdown_heatmap/coco/hrnet_w32_coco_256x192.py'  # noqa: E501
 args.pose_checkpoint = 'https://download.openmmlab.com/mmpose/top_down/hrnet/hrnet_w32_coco_256x192-c78dce93_20200708.pth'  # noqa: E501
 
-N_PERSON = 2  # for bboxes
+N_PERSON = 2  # * for bboxes
 ANN_TO_INDEX = dict()
 CONSOLE = Console()
 
@@ -60,6 +60,10 @@ def extract_frame(video_path):
         cv2.imwrite(frame_path, frame)
         cnt += 1
         flag, frame = vid.read()
+
+    # corrupted video, no frame
+    if first_frame is None:
+        return None, None
 
     return frame_paths, first_frame.shape[:2]
 
@@ -333,6 +337,10 @@ def pose_inference(args, frame_paths, det_results, pose_model=None):
 
 def pose_extraction(vid, thr=None, det_model=None, pose_model=None):
     frame_paths, img_shape = extract_frame(vid)
+    if frame_paths is None and img_shape is None:
+        CONSOLE.print(f'{vid} is corrupted', style='red')
+        return -1, -1
+
     det_results = detection_inference(args, frame_paths, det_model)
     det_results = det_postproc(det_results, vid)
     if 0 == len(det_results):
@@ -393,6 +401,11 @@ def parse_args():
                         help=('if less than this rate of frame poses have a '
                               'lower confidence than `poses-score-thr`, do not'
                               'save the pkl result'))
+    parser.add_argument(
+        '--filter-pose',  # TODO: implement
+        action='store_true',
+        help='whether to make the pose estimation of frames '
+        'with score confidence less than the threshold, 0')
     parser.add_argument('--device', type=str, default='cuda:0')
     args = parser.parse_args()
     return args
@@ -412,6 +425,8 @@ def main(sub_args, det_model=None, pose_model=None):
                                          det_model, pose_model)
     if anno is None and correct_rate is None:
         return 0
+    elif anno == -1 and correct_rate == -1:
+        return
 
     # save poses if they don't have more than `args.incorrect_thr %` of poses
     # with a lower confidence than `args.poses_score_thr`
