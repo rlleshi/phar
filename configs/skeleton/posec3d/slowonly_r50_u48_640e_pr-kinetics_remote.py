@@ -1,7 +1,6 @@
 # * dataset settings
 dataset_type = 'PoseDataset'
-data_root = ('/home/rejnald/projects/side_projects/phar/mmaction2/data/'
-             'phar/pose/')
+data_root = ('/mmaction2/data/')
 data_root_val = data_root
 data_root_test = data_root
 ann_file_train = f'{data_root}/kinesphere_train.pkl'
@@ -86,7 +85,7 @@ test_pipeline = [
     dict(type='Collect', keys=['imgs', 'label'], meta_keys=[]),
     dict(type='ToTensor', keys=['imgs'])
 ]
-data = dict(videos_per_gpu=4,
+data = dict(videos_per_gpu=16,
             workers_per_gpu=1,
             test_dataloader=dict(videos_per_gpu=1),
             train=dict(type=dataset_type,
@@ -103,13 +102,13 @@ data = dict(videos_per_gpu=4,
                       pipeline=test_pipeline))
 
 # optimizer
-optimizer = dict(type='SGD', lr=0.005, momentum=0.9,
+optimizer = dict(type='SGD', lr=0.1, momentum=0.9,
                  weight_decay=0.0003)  # this lr is used for 8 gpus
 optimizer_config = dict(grad_clip=dict(max_norm=40, norm_type=2))
 
 # learning policy
 lr_config = dict(policy='CosineAnnealing', by_epoch=False, min_lr=0)
-total_epochs = 240
+total_epochs = 640
 checkpoint_config = dict(interval=20)
 workflow = [('train', 10)]
 evaluation = dict(interval=5,
