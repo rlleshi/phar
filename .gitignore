@@ -137,7 +137,6 @@ dataset_2/
 mmaction2/data/
 mmaction2/work_dir/
 mlruns/
-demo/
-demo/subclip_276.mp4
+demos/
 annotator/via-3.0.11/
 checkpoints/

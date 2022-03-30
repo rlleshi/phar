@@ -6,7 +6,7 @@ data_root_test = data_root
 ann_file_train = f'{data_root}/kinesphere_train.pkl'
 ann_file_val = f'{data_root_val}/kinesphere_val.pkl'
 ann_file_test = f'{data_root_test}/kinesphere_val.pkl'
-num_classes = 5
+num_classes = 6
 left_kp = [1, 3, 5, 7, 9, 11, 13, 15]
 right_kp = [2, 4, 6, 8, 10, 12, 14, 16]
 
@@ -35,7 +35,8 @@ model = dict(type='Recognizer3D',
              test_cfg=dict(average_clips='prob'))
 
 train_pipeline = [
-    dict(type='UniformSampleFrames', clip_len=48),
+    # * 54 (25% of 210) sampled frames seems better
+    dict(type='UniformSampleFrames', clip_len=54),
     dict(type='PoseDecode'),
     dict(type='PoseCompact', hw_ratio=1., allow_imgpad=True),
     dict(type='Resize', scale=(-1, 64)),
@@ -52,7 +53,7 @@ train_pipeline = [
     dict(type='ToTensor', keys=['imgs', 'label'])
 ]
 val_pipeline = [
-    dict(type='UniformSampleFrames', clip_len=48, num_clips=1, test_mode=True),
+    dict(type='UniformSampleFrames', clip_len=54, num_clips=1, test_mode=True),
     dict(type='PoseDecode'),
     dict(type='PoseCompact', hw_ratio=1., allow_imgpad=True),
     dict(type='Resize', scale=(-1, 64)),
@@ -67,7 +68,7 @@ val_pipeline = [
     dict(type='ToTensor', keys=['imgs'])
 ]
 test_pipeline = [
-    dict(type='UniformSampleFrames', clip_len=48, num_clips=10,
+    dict(type='UniformSampleFrames', clip_len=54, num_clips=10,
          test_mode=True),
     dict(type='PoseDecode'),
     dict(type='PoseCompact', hw_ratio=1., allow_imgpad=True),
