@@ -30,14 +30,13 @@ def parse_args():
     return args
 
 
-def get_train_acc(log, start, topk_length):
+def get_train_acc(log, start, topk_length, top_train):
     """Get training accuracy from mmaction2 log files."""
-    look_back, n_back = 1700, 7
-    top_train = {f'top{k}': 0 for k in range(1, 6)}
-
+    # * play with these two parameters if the results aren't perfect
+    look_back, n_back = 1600, 7
     # train indexes start before needles[1]
     train_index = start
-    # take average of last 5 readings
+    # take average of last n_back readings
     for row in log[train_index - look_back:train_index].split('\t'):
         for i in range(1, 6):
             t = f'top{i}'
@@ -88,7 +87,7 @@ def get_train_val_acc(logs):
                 continue
 
             try:
-                top_train = get_train_acc(log, start, topk_length)
+                top_train = get_train_acc(log, start, topk_length, top_train)
             except IndexError:
                 CONSOLE.print('Log is missing train infos', style='yellow')
 
@@ -149,7 +148,6 @@ def main():
             mlflow.log_artifact(osp.join(args.work_dir, top_model[0]))
 
         last_model = get_last_model(args.work_dir)
-        CONSOLE.print(last_model, style='yellow')
         if not last_model or len(last_model) == 1:
             CONSOLE.print(f'Last saved checkpoint not found @{args.work_dir}',
                           style='yellow')
