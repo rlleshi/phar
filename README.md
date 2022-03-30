@@ -3,16 +3,16 @@
 
 Make Porn Great Again
 
-## Build the Dataset for Training
+## Building datasets
 
-## Build Video Dataset
+### Build Video Dataset
 
 1. Define the annotations @resources/annotations/annotations.txt
 2. Create the clip dataset using `tools/data/generate_dataset.py`
 3. Downgrade the quality of the videos using `tools/data/resize_videos.py`. Training will be much faster as resize overhead is removed.
 4. Ggf. use `RepeatDataset` to further speed up training.
 
-## Build Pose Dataset
+### Build Pose Dataset
 
 1. Define the annotations @resources/annotations/annotations_pose.txt
 2. Extract the pose information from the videos with `tools/analysis/pose_feasibility.py` or `tools/data/skeleton/generate_dataset_pose.py`
@@ -20,7 +20,7 @@ Make Porn Great Again
 3. Merge the poses into lists with `merge_pose` @`tools/misc.py`
 4. Happy Training!
 
-## Build Audio Dataset
+### Build Audio Dataset
 
 1. Define the annotations @resources/annotations/annotations_audio.txt
 2. Extract the audio from the videos with `mmaction2/tools/data/extract_audio.py`
