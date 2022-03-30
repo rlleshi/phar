@@ -30,17 +30,38 @@ def parse_args():
     return args
 
 
+def get_train_acc(log, start, topk_length):
+    """Get training accuracy from mmaction2 log files."""
+    look_back, n_back = 1700, 7
+    top_train = {f'top{k}': 0 for k in range(1, 6)}
+
+    # train indexes start before needles[1]
+    train_index = start
+    # take average of last 5 readings
+    for row in log[train_index - look_back:train_index].split('\t'):
+        for i in range(1, 6):
+            t = f'top{i}'
+            sub_index = row.find(t)
+            if sub_index == -1:
+                break
+
+            topk = row[sub_index:sub_index + topk_length]
+            topk = float(topk.split('acc: ')[1])
+            top_train[t] += topk
+
+    top_train = {k: round(v / n_back, 3) for k, v in top_train.items()}
+    return top_train
+
+
 def get_train_val_acc(logs):
     """Get the validation & training accuracy from mmaction2 log files."""
 
     # specific to mmaction2 logs
     needles = ('Now best checkpoint is saved as', 'Evaluating top_k_accuracy')
     topk_length = 15
-    # for train samples
-    look_back, n_back = 1700, 7
 
-    top_train = {f'top{k}': 0 for k in range(1, 6)}
     top_val = {f'top{k}': 0 for k in range(1, 6)}
+    top_train = {f'top{k}': 0 for k in range(1, 6)}
 
     for log in logs:
         # find all indexes for new best models logs
@@ -66,21 +87,10 @@ def get_train_val_acc(logs):
             if not replace:
                 continue
 
-            # train indexes start before needles[1]
-            train_index = start
-            # take average of last 5 readings
-            for row in log[train_index - look_back:train_index].split('\t'):
-                for i in range(1, 6):
-                    t = f'top{i}'
-                    sub_index = row.find(t)
-                    if sub_index == -1:
-                        break
-
-                    topk = row[sub_index:sub_index + topk_length]
-                    topk = float(topk.split('acc: ')[1])
-                    top_train[t] += topk
-
-            top_train = {k: round(v / n_back, 3) for k, v in top_train.items()}
+            try:
+                top_train = get_train_acc(log, start, topk_length)
+            except IndexError:
+                CONSOLE.print('Log is missing train infos', style='yellow')
 
     return top_train, top_val
 
@@ -139,7 +149,8 @@ def main():
             mlflow.log_artifact(osp.join(args.work_dir, top_model[0]))
 
         last_model = get_last_model(args.work_dir)
-        if not last_model:
+        CONSOLE.print(last_model, style='yellow')
+        if not last_model or len(last_model) == 1:
             CONSOLE.print(f'Last saved checkpoint not found @{args.work_dir}',
                           style='yellow')
         else:
