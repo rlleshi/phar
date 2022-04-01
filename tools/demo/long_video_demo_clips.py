@@ -48,7 +48,7 @@ def parse_args():
     parser.add_argument('out', help='out file. Video or Json')
     parser.add_argument('--ann',
                         type=str,
-                        default='resources/annotations/annotations.txt',
+                        default='resources/annotations/annotations_pose.txt',
                         help='for base or eval annotations')
     parser.add_argument('--type',
                         type=str,
@@ -61,11 +61,11 @@ def parse_args():
                         help='Number of processes to extract subclips')
     parser.add_argument('--num-gpus',
                         type=int,
-                        default=4,
+                        default=1,
                         help='Number of gpus to perform pose-har')
     parser.add_argument('--subclip-duration',
                         type=int,
-                        default=10,
+                        default=7,
                         help='duration of subclips')
     args = parser.parse_args()
     return args
@@ -92,12 +92,12 @@ def pose(items):
             gpu
         ]
         try:
-            result = subprocess.run(subargs, capture_output=True)
+            subprocess.run(subargs, capture_output=True)
 
-            if args.out.endswith('.json'):
-                # TODO: currently doesn't work
-                json_res.append(clip[2:4] + '-' +
-                                prettify(result.stdout).split('result')[1])
+            # if args.out.endswith('.json'):
+            #     # TODO: currently doesn't work
+            #     json_res.append(clip[2:4] + '-' +
+            #                     prettify(result.stdout).split('result')[1])
         except Exception as e:
             CONSOLE.print(e, style='bold red')
 

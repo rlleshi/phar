@@ -1,40 +1,39 @@
 import os.path as osp
 import shutil
 import sys
-import numpy as np
-
 from argparse import ArgumentParser
+
+import numpy as np
+import utils as utils  # noqa
 from rich.console import Console
 
 sys.path.append('./tools')  # noqa
-import utils as utils # noqa
 
 CONSOLE = Console()
 SPEC_EXT = '.npy'
 
 
 def parse_args():
-    parser = ArgumentParser(prog='generate file list for audio dataset')
+    parser = ArgumentParser(prog='generate file list for audio dataset based '
+                            'on video list')
     parser.add_argument(
         'src_dir',
         type=str,
         help='root dir for video dataset where the ann files are generated')
     parser.add_argument(
-        '--audio_dir',
+        '--audio-dir',
         type=str,
         default='audio_feature',
         help='audio subdir inside the src_dir that contains spectograms')
-    parser.add_argument(
-        '--split',
-        type=str,
-        nargs='+',
-        default=['train', 'val', 'test'],
-        help='splits where the spectograms are located')
-    parser.add_argument(
-        '--ann',
-        type=str,
-        default='resources/annotations/annotations_audio.txt',
-        help='audio annotations')
+    parser.add_argument('--split',
+                        type=str,
+                        nargs='+',
+                        default=['train', 'val', 'test'],
+                        help='splits where the spectograms are located')
+    parser.add_argument('--ann',
+                        type=str,
+                        default='resources/annotations/annotations_audio.txt',
+                        help='audio annotations')
     args = parser.parse_args()
     return args
 
@@ -67,6 +66,10 @@ def main():
 
                 if new_class_id is not None:
                     new_path = new_path.split('.')[0] + SPEC_EXT
+                    if not osp.exists(new_path):
+                        # corresponding .npy file doesn't exist (e.g. filtered)
+                        continue
+
                     count = len(np.load(new_path))
                     out.write(f'{new_path} {count} {new_class_id}\n')
 

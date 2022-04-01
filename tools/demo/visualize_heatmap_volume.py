@@ -148,7 +148,7 @@ def parse_args():
     parser.add_argument('--det-score-thr',
                         type=float,
                         help='detection score threshold')
-    parser.add_argument('--out-dir', type=str, default='demo/')
+    parser.add_argument('--out-dir', type=str, default='demos/')
     parser.add_argument('--device', type=str, default='cuda:0')
     args = parser.parse_args()
     return args

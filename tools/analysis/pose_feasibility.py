@@ -33,7 +33,7 @@ def parse_args():
     parser.add_argument('--src-dir',
                         default='mmaction2/data/phar',
                         help='directory of dataset')
-    parser.add_argument('--out_dir', default='mmaction2/data/phar/pose')
+    parser.add_argument('--out-dir', default='mmaction2/data/phar/pose')
     parser.add_argument('--ann',
                         type=str,
                         default='resources/annotations/annotations_pose.txt',
@@ -47,7 +47,7 @@ def parse_args():
     # TODO: 2) Consider not making the pose points with low confidence zero
     parser.add_argument('--pose-score-thr',
                         type=float,
-                        default=0.6,
+                        default=0.4,
                         help='pose estimation score threshold')
     parser.add_argument('--resume',
                         action='store_true',
@@ -106,7 +106,8 @@ def main():
     sub_args.det_score_thr = 0.5
     sub_args.pose_score_thr = args.pose_score_thr
     sub_args.ann = args.ann
-    sub_args.correct_rate = 0.5
+    sub_args.correct_rate = 0.4
+    sub_args.filter_pose = False
 
     resume_list = []
     if args.resume:

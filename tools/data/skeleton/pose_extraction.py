@@ -335,7 +335,11 @@ def pose_inference(args, frame_paths, det_results, pose_model=None):
     return kp
 
 
-def pose_extraction(vid, thr=None, det_model=None, pose_model=None):
+def pose_extraction(vid,
+                    filter_pose,
+                    thr=None,
+                    det_model=None,
+                    pose_model=None):
     frame_paths, img_shape = extract_frame(vid)
     if frame_paths is None and img_shape is None:
         CONSOLE.print(f'{vid} is corrupted', style='red')
@@ -365,7 +369,8 @@ def pose_extraction(vid, thr=None, det_model=None, pose_model=None):
         for i in range(0, n_frames):
             for j in range(0, 17):  # 17 defined keypoints
                 if anno['keypoint_score'][k][i][j] < thr:
-                    anno['keypoint'][k][i][j] = 0
+                    if filter_pose:
+                        anno['keypoint'][k][i][j] = 0
                     count_0 += 1
 
     correct_rate = 1 - round(count_0 / (n_person * n_frames * 17), 3)
@@ -404,8 +409,8 @@ def parse_args():
     parser.add_argument(
         '--filter-pose',  # TODO: implement
         action='store_true',
-        help='whether to make the pose estimation of frames '
-        'with score confidence less than the threshold, 0')
+        help='whether to set the pose estimation of frames '
+        'with score confidence less than the threshold to zero')
     parser.add_argument('--device', type=str, default='cuda:0')
     args = parser.parse_args()
     return args
@@ -421,8 +426,9 @@ def main(sub_args, det_model=None, pose_model=None):
     global ANN_TO_INDEX, args
     args = sub_args
     ANN_TO_INDEX = utils.annotations_dic(args.ann)
-    anno, correct_rate = pose_extraction(args.video, args.pose_score_thr,
-                                         det_model, pose_model)
+    anno, correct_rate = pose_extraction(args.video, args.filter_pose,
+                                         args.pose_score_thr, det_model,
+                                         pose_model)
     if anno is None and correct_rate is None:
         return 0
     elif anno == -1 and correct_rate == -1:
