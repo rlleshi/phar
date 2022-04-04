@@ -4,10 +4,10 @@ import sys
 from argparse import ArgumentParser
 
 import numpy as np
-import utils as utils  # noqa
 from rich.console import Console
 
 sys.path.append('./tools')  # noqa
+import utils as utils  # noqa isort:skip
 
 CONSOLE = Console()
 SPEC_EXT = '.npy'

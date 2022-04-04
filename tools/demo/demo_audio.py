@@ -14,7 +14,9 @@ def parse_args():
     parser.add_argument('config', help='test config file path')
     parser.add_argument('checkpoint', help='checkpoint file/url')
     parser.add_argument('audio', help='audio file')
-    parser.add_argument('label', help='label file')
+    parser.add_argument('--label',
+                        default='resources/annotations/annotations_audio.txt',
+                        help='label file')
     parser.add_argument(
         '--cfg-options',
         nargs='+',

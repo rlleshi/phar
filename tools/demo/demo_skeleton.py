@@ -119,6 +119,12 @@ def parse_args():
                         type=float,
                         default=0.6,
                         help='pose estimation score threshold')
+    parser.add_argument(
+        '--correct-rate',
+        type=float,
+        default=0.5,
+        help=('if less than this rate of frame poses have a '
+              'lower confidence than `poses-score-thr`, skip the demo'))
     args = parser.parse_args()
     return args
 
@@ -234,7 +240,7 @@ def main():
                      modality='Pose',
                      total_frames=num_frame)
     num_person = max([len(x) for x in pose_results])
-    # num_person = 2
+    num_person = 2  # TODO: one person can also be in the frame
     CONSOLE.print(f'# Persons: {num_person}\n', style='green')
 
     num_keypoint = 17
@@ -259,12 +265,11 @@ def main():
                     fake_anno['keypoint'][k][i][j] = 0
                     count_0 += 1
 
-    incorrect_rate = round(100 * count_0 / (num_person * num_frame * 17), 2)
-    # TODO add in parse args
-    if incorrect_rate < 60:
-        CONSOLE.print(f'Clip has incorrect rate of {incorrect_rate}',
+    correct_rate = 1 - round(count_0 / (num_person * num_frame * 17), 3)
+    if correct_rate < args.correct_rate:
+        CONSOLE.print((f'Clip has correct rate of {correct_rate} lower than '
+                       f'the threshold of {args.correct_rate}. Skipping...'),
                       style='red')
-        return
 
     results = inference_recognizer(model, fake_anno)
 
