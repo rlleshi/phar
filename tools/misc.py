@@ -1,8 +1,15 @@
 import os
 import os.path as osp
+import subprocess
+import sys
+from pathlib import Path
 
 import numpy as np
 from rich.console import Console
+from tqdm import tqdm
+
+sys.path.append('./tools')  # noqa: E501
+import utils as utils  # noqa isort:skip
 
 CONSOLE = Console()
 
@@ -13,6 +20,7 @@ CONSOLE = Console()
 #   1.2 filter_pose(): filter pose estimation based on threshold
 #   1.3 read_pickel(): examines the pose information
 #   1.4 convert_pose_label(): e.g. from (general) annotations.txt to pose_ann
+#   1.5 visualize_heatmaps(): visualize groups of poses' heatmaps
 #
 # 2. Video Manipulation
 #   2.1 merge_videos(): with MoviePy
@@ -31,6 +39,64 @@ CONSOLE = Console()
 #
 # 4. Obscure
 #   4.1 merge_train_test()
+
+
+def visualize_heatmaps(src_dir='mmaction2/data/phar',
+                       ann='resources/annotations/annotations_pose.txt',
+                       out_dir='demos/pose',
+                       rate=0.1,
+                       min_count=30):
+    """Visualize a random subset of poses of a dataset.
+
+    Args:
+        src_dir (str, optional): videos dir (poses inside this dir).
+        ann (str, optional): label map file.
+        out_dir (str, optional): out dir to store results.
+        rate (float, optional): rate of total poses to be visualized.
+        min_count (int, optional): if less than minimal, visualize all
+    """
+    Path(out_dir).mkdir(parents=True, exist_ok=True)
+    script_path = 'tools/demo/visualize_heatmap_volume.py'
+    np.random.seed()
+
+    labels = utils.annotations_list(ann)
+    for label in tqdm(labels):
+        for split in ['train', 'val', 'test']:
+            # path to poses dir for a category
+            path = osp.join(src_dir, 'pose', split, label)
+            pkls = os.listdir(path)
+            if not pkls:
+                continue
+
+            vis_count = round(len(pkls) * rate)
+            if vis_count < min_count:
+                # visualize all in case min_count is not reached
+                vis_count = len(pkls)
+
+            # pick a vis_count subset to visualize
+            to_visualize = np.random.choice(pkls, size=vis_count)
+            out = osp.join(out_dir, split, label)
+            Path(out).mkdir(parents=True, exist_ok=True)
+
+            for clip in tqdm(to_visualize):
+                subargs = [
+                    'python',
+                    script_path,
+                    osp.join(path.replace('pose/', ''),
+                             osp.splitext(clip)[0] + '.mp4'),
+                    osp.join(path, clip),
+                    '--ann',
+                    ann,  #
+                    '--out-dir',
+                    out,  #
+                    '--device',
+                    'cuda:0'
+                ]
+                subprocess.run(subargs)
+
+
+visualize_heatmaps()
+# -----------------------------------------------------------------------------
 
 
 def merge_pose(path, split, level=2):
@@ -56,7 +122,7 @@ def merge_pose(path, split, level=2):
         pickle.dump(result, out, protocol=pickle.HIGHEST_PROTOCOL)
 
 
-# merge_pose('mmaction2/data/phar/pose/train', 'train')
+# merge_pose('mmaction2/data/phar/pose/val', 'val')
 # -----------------------------------------------------------------------------
 
 
@@ -108,7 +174,10 @@ def read_pickel(path):
         f_no = len(annotations['keypoint'][0])
         pos = int(f_no / 2)
         CONSOLE.print(f'Keys: {annotations.keys()}', style='green')
-        CONSOLE.print(annotations['label'])
+        CONSOLE.print(f"Label: {annotations['label']}")
+        CONSOLE.print(f"Keypoint Shape: {annotations['keypoint'].shape}")
+        CONSOLE.print(
+            f"Keypoint Score Shape: {annotations['keypoint_score'].shape}")
         # pose estimation
         CONSOLE.print(
             annotations['keypoint'][0][pos],
@@ -120,14 +189,15 @@ def read_pickel(path):
         print(annotations)
 
 
-# read_pickel('mmaction2/data/phar/pose/kinesphere_train.pkl')
+# read_pickel('mmaction2/data/phar/pose/0.4_0.4/val/fondling/0EI0TELM.pkl')
 # -----------------------------------------------------------------------------
 
 
-def convert_pose_label(path,
-                       level=2,
-                       base_ann='resources/annotations/annotations.txt',
-                       pose_ann='resources/annotations/annotations_pose.txt'):
+def convert_pose_label(
+        path,
+        level=2,
+        base_ann='resources/annotations/annotations_pose.txt',
+        pose_ann='resources/annotations/annotations_pose_new.txt'):
     """Convert pose labels from the all-labels annotations to pose-only
     annotations.
 
@@ -156,7 +226,7 @@ def convert_pose_label(path,
             mmcv.dump(annotations, item, protocol=pickle.HIGHEST_PROTOCOL)
 
 
-# convert_pose_label('mmaction2/data/phar/pose/val')
+# convert_pose_label('mmaction2/data/phar/pose/val/')
 # -----------------------------------------------------------------------------
 
 
