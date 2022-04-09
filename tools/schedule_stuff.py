@@ -10,12 +10,12 @@ CONSOLE = Console()
 # https://schedule.readthedocs.io/en/stable/examples.html
 
 
-def pose_feasibility(cat):
+def pose_feasibility(cat, out_dir='mmaction2/data/phar/pose'):
     """Schedule for the pose_feasibility.py script."""
     CONSOLE.print(f'Checking pose feasibility for {cat}...', style='green')
     script_path = 'tools/analysis/pose_feasibility.py'
 
-    subargs = ['python', script_path, cat]
+    subargs = ['python', script_path, cat, '--out-dir', out_dir, '--resume']
     subprocess.run(subargs)
     return schedule.CancelJob
 
@@ -73,9 +73,12 @@ def extract_audio_feature(in_dir, out_dir):
     return schedule.CancelJob
 
 
-schedule.every().sunday.at('22:43').do(extract_audio,
-                                       in_dir='data/ucf101/videos/',
-                                       out_dir='data/ucf101/audio/')
+# schedule.every().sunday.at('22:43').do(extract_audio,
+#                                        in_dir='data/ucf101/videos/',
+#                                        out_dir='data/ucf101/audio/')
+
+schedule.every().thursday.at('05:00').do(
+    pose_feasibility, cat='doggy', out_dir='mmaction2/data/phar/pose/0.4_0.4/')
 
 while True:
     schedule.run_pending()

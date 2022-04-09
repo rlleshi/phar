@@ -43,8 +43,6 @@ def parse_args():
                         default=['train', 'val', 'test'],
                         choices=['train', 'val', 'test'],
                         help='the splits where clips are found')
-    # TODO: 1) Consider lowering the threshold (need to test)
-    # TODO: 2) Consider not making the pose points with low confidence zero
     parser.add_argument('--pose-score-thr',
                         type=float,
                         default=0.4,
