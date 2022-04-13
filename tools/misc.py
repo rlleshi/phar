@@ -71,7 +71,7 @@ def visualize_heatmaps(src_dir='mmaction2/data/phar',
             vis_count = round(len(pkls) * rate)
             if vis_count < min_count:
                 # visualize all in case min_count is not reached
-                vis_count = len(pkls)
+                vis_count = len(pkls) if len(pkls) < min_count else min_count
 
             # pick a vis_count subset to visualize
             to_visualize = np.random.choice(pkls, size=vis_count)
@@ -95,7 +95,7 @@ def visualize_heatmaps(src_dir='mmaction2/data/phar',
                 subprocess.run(subargs)
 
 
-visualize_heatmaps()
+# visualize_heatmaps()
 # -----------------------------------------------------------------------------
 
 
@@ -122,7 +122,7 @@ def merge_pose(path, split, level=2):
         pickle.dump(result, out, protocol=pickle.HIGHEST_PROTOCOL)
 
 
-# merge_pose('mmaction2/data/phar/pose/val', 'val')
+merge_pose('mmaction2/data/phar/pose/val', 'val')
 # -----------------------------------------------------------------------------
 
 

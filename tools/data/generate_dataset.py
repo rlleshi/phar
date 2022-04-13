@@ -72,7 +72,7 @@ def parse_args():
                         type=str,
                         default='resources/annotations/annotations.txt',
                         help='annotation file')
-    parser.add_argument('--out_dir',
+    parser.add_argument('--out-dir',
                         default='mmaction2/data/phar',
                         help='out video directory')
     parser.add_argument('--split',
@@ -222,6 +222,7 @@ def main():
             item.endswith(ext) for ext in VIDEO_EXTS)
     ]
     annotations = [item for item in items if item.endswith(ANN_EXT)]
+    np.random.shuffle(videos)
 
     process_map(extract_clips,
                 zip(videos, repeat(annotations), repeat(args)),

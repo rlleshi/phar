@@ -18,7 +18,7 @@ def parse_args():
         help='name of experiment. Should correspond the model name')
     parser.add_argument(
         'run_name',
-        help='name of experiment run. Add thingsl ike hyperparameters here.')
+        help='name of experiment run. Add things like hyperparameters here.')
     parser.add_argument('work_dir', help='dir where model files are stored')
     parser.add_argument('--mlrun-dir',
                         default='./mlruns',
@@ -33,7 +33,8 @@ def parse_args():
 def get_train_acc(log, start, topk_length, top_train):
     """Get training accuracy from mmaction2 log files."""
     # * play with these two parameters if the results aren't perfect
-    look_back, n_back = 1600, 7
+    # audio: 1400, 6
+    look_back, n_back = 1300, 6
     # train indexes start before needles[1]
     train_index = start
     # take average of last n_back readings
