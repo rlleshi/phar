@@ -13,7 +13,7 @@ right_kp = [2, 4, 6, 8, 10, 12, 14, 16]
 # model settings
 model = dict(type='Recognizer3D',
              backbone=dict(type='ResNet3dSlowOnly',
-                           depth=101,
+                           depth=152,
                            pretrained=None,
                            in_channels=17,
                            base_channels=32,
@@ -30,13 +30,15 @@ model = dict(type='Recognizer3D',
                            in_channels=512,
                            num_classes=num_classes,
                            spatial_type='avg',
-                           dropout_ratio=0.6),
+                           dropout_ratio=0.5,
+                           topk=(1, 2, 3, 4, 5)),
              train_cfg=dict(),
              test_cfg=dict(average_clips='prob'))
 
 train_pipeline = [
     # * 54 (25% of 210) sampled frames seems better
-    dict(type='UniformSampleFrames', clip_len=48),
+    # 48 frames = 22.8%
+    dict(type='UniformSampleFrames', clip_len=54),
     dict(type='PoseDecode'),
     dict(type='PoseCompact', hw_ratio=1., allow_imgpad=True),
     dict(type='Resize', scale=(-1, 64)),
@@ -53,7 +55,7 @@ train_pipeline = [
     dict(type='ToTensor', keys=['imgs', 'label'])
 ]
 val_pipeline = [
-    dict(type='UniformSampleFrames', clip_len=48, num_clips=1, test_mode=True),
+    dict(type='UniformSampleFrames', clip_len=54, num_clips=1, test_mode=True),
     dict(type='PoseDecode'),
     dict(type='PoseCompact', hw_ratio=1., allow_imgpad=True),
     dict(type='Resize', scale=(-1, 64)),
@@ -68,7 +70,7 @@ val_pipeline = [
     dict(type='ToTensor', keys=['imgs'])
 ]
 test_pipeline = [
-    dict(type='UniformSampleFrames', clip_len=48, num_clips=10,
+    dict(type='UniformSampleFrames', clip_len=54, num_clips=10,
          test_mode=True),
     dict(type='PoseDecode'),
     dict(type='PoseCompact', hw_ratio=1., allow_imgpad=True),
@@ -103,14 +105,14 @@ data = dict(videos_per_gpu=16,
                       pipeline=test_pipeline))
 
 # optimizer
-optimizer = dict(type='SGD', lr=0.025, momentum=0.9,
+optimizer = dict(type='SGD', lr=0.05, momentum=0.9,
                  weight_decay=0.0003)  # this lr is used for 8 gpus
 optimizer_config = dict(grad_clip=dict(max_norm=40, norm_type=2))
 
 # learning policy
 lr_config = dict(policy='CosineAnnealing', by_epoch=False, min_lr=0)
-total_epochs = 480
-checkpoint_config = dict(interval=20)
+total_epochs = 640
+checkpoint_config = dict(interval=40)
 workflow = [('train', 10)]
 evaluation = dict(interval=5,
                   metrics=['top_k_accuracy', 'mean_class_accuracy'],
