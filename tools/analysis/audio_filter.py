@@ -15,7 +15,8 @@ EXTS = ['.wav']
 
 
 def parse_args():
-    parser = ArgumentParser(prog='filter audio based on loudness')
+    parser = ArgumentParser(prog='filter audio based on loudness. '
+                            'Removes a certain percentile')
     parser.add_argument('src_dir', help='src directory')
     parser.add_argument('out_dir', help='out directory')
     parser.add_argument('--percentile',

@@ -1,7 +1,8 @@
 model = dict(type='SkeletonGCN',
              backbone=dict(type='AGCN',
                            in_channels=3,
-                           graph_cfg=dict(layout='coco', strategy='agcn')),
+                           graph_cfg=dict(layout='coco', strategy='agcn'),
+                           dropout=0.2),
              cls_head=dict(type='STGCNHead',
                            num_classes=6,
                            in_channels=256,
@@ -16,27 +17,27 @@ ann_file_val = '/mmaction2/data/kinesphere_val.pkl'
 ann_file_test = '/mmaction2/data/kinesphere_val.pkl'
 
 train_pipeline = [
-    dict(type='PaddingWithLoop', clip_len=300),
+    dict(type='PaddingWithLoop', clip_len=450),
     dict(type='PoseDecode'),
     dict(type='FormatGCNInput', input_format='NCTVM'),
     dict(type='Collect', keys=['keypoint', 'label'], meta_keys=[]),
     dict(type='ToTensor', keys=['keypoint'])
 ]
 val_pipeline = [
-    dict(type='PaddingWithLoop', clip_len=300),
+    dict(type='PaddingWithLoop', clip_len=450),
     dict(type='PoseDecode'),
     dict(type='FormatGCNInput', input_format='NCTVM'),
     dict(type='Collect', keys=['keypoint', 'label'], meta_keys=[]),
     dict(type='ToTensor', keys=['keypoint'])
 ]
 test_pipeline = [
-    dict(type='PaddingWithLoop', clip_len=300),
+    dict(type='PaddingWithLoop', clip_len=450),
     dict(type='PoseDecode'),
     dict(type='FormatGCNInput', input_format='NCTVM'),
     dict(type='Collect', keys=['keypoint', 'label'], meta_keys=[]),
     dict(type='ToTensor', keys=['keypoint'])
 ]
-data = dict(videos_per_gpu=16,
+data = dict(videos_per_gpu=32,
             workers_per_gpu=2,
             test_dataloader=dict(videos_per_gpu=1),
             train=dict(type=dataset_type,

@@ -91,15 +91,10 @@ def pose(items):
             '--device',
             gpu
         ]
-        try:
-            subprocess.run(subargs, capture_output=True)
-
-            # if args.out.endswith('.json'):
-            #     # TODO: currently doesn't work
-            #     json_res.append(clip[2:4] + '-' +
-            #                     prettify(result.stdout).split('result')[1])
-        except Exception as e:
-            CONSOLE.print(e, style='bold red')
+        result = subprocess.run(subargs, capture_output=True)
+        error = result.stderr.decode('utf-8')
+        if error:
+            CONSOLE.print(error, style='red')
 
 
 def recognition(items):

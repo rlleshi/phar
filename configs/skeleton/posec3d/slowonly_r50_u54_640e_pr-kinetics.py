@@ -1,5 +1,7 @@
 # * dataset settings
 dataset_type = 'PoseDataset'
+# data_root = ('/home/rejnald/projects/side_projects/phar/mmaction2/data/'
+#              'phar/pose/')
 data_root = ('/mmaction2/data/')
 data_root_val = data_root
 data_root_test = data_root
@@ -13,7 +15,7 @@ right_kp = [2, 4, 6, 8, 10, 12, 14, 16]
 # model settings
 model = dict(type='Recognizer3D',
              backbone=dict(type='ResNet3dSlowOnly',
-                           depth=152,
+                           depth=50,
                            pretrained=None,
                            in_channels=17,
                            base_channels=32,
@@ -30,7 +32,7 @@ model = dict(type='Recognizer3D',
                            in_channels=512,
                            num_classes=num_classes,
                            spatial_type='avg',
-                           dropout_ratio=0.5,
+                           dropout_ratio=0.7,
                            topk=(1, 2, 3, 4, 5)),
              train_cfg=dict(),
              test_cfg=dict(average_clips='prob'))
@@ -89,7 +91,7 @@ test_pipeline = [
     dict(type='ToTensor', keys=['imgs'])
 ]
 data = dict(videos_per_gpu=16,
-            workers_per_gpu=1,
+            workers_per_gpu=2,
             test_dataloader=dict(videos_per_gpu=1),
             train=dict(type=dataset_type,
                        ann_file=ann_file_train,
@@ -105,7 +107,7 @@ data = dict(videos_per_gpu=16,
                       pipeline=test_pipeline))
 
 # optimizer
-optimizer = dict(type='SGD', lr=0.05, momentum=0.9,
+optimizer = dict(type='SGD', lr=0.1, momentum=0.9,
                  weight_decay=0.0003)  # this lr is used for 8 gpus
 optimizer_config = dict(grad_clip=dict(max_norm=40, norm_type=2))
 
@@ -125,11 +127,11 @@ log_config = dict(interval=20, hooks=[
 
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-# load_from = (
-#     'https://download.openmmlab.com/mmaction/skeleton/posec3d/'
-#     'slowonly_kinetics400_pretrained_r50_u48_120e_ucf101_split1_keypoint/'
-#     'slowonly_kinetics400_pretrained_r50_u48_120e_ucf101_split1_keypoint'
-#     '-cae8aa4a.pth')
+load_from = (
+    'https://download.openmmlab.com/mmaction/skeleton/posec3d/'
+    'slowonly_kinetics400_pretrained_r50_u48_120e_ucf101_split1_keypoint/'
+    'slowonly_kinetics400_pretrained_r50_u48_120e_ucf101_split1_keypoint'
+    '-cae8aa4a.pth')
 load_from = None
 resume_from = None
 find_unused_parameters = False

@@ -407,7 +407,7 @@ def parse_args():
                               'lower confidence than `poses-score-thr`, do not'
                               'save the pkl result'))
     parser.add_argument(
-        '--filter-pose',  # TODO: implement
+        '--filter-pose',
         action='store_true',
         help='whether to set the pose estimation of frames '
         'with score confidence less than the threshold to zero')

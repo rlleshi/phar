@@ -34,7 +34,7 @@ def get_train_acc(log, start, topk_length, top_train):
     """Get training accuracy from mmaction2 log files."""
     # * play with these two parameters if the results aren't perfect
     # audio: 1400, 6
-    look_back, n_back = 1300, 6
+    look_back, n_back = 1400, 6
     # train indexes start before needles[1]
     train_index = start
     # take average of last n_back readings
