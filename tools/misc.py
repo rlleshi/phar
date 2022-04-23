@@ -122,11 +122,11 @@ def merge_pose(path, split, level=2):
         pickle.dump(result, out, protocol=pickle.HIGHEST_PROTOCOL)
 
 
-merge_pose('mmaction2/data/phar/pose/val', 'val')
+# merge_pose('mmaction2/data/phar/pose/val', 'val')
 # -----------------------------------------------------------------------------
 
 
-def filter_pose(path, thr=0.5):
+def filter_pose(path, thr=0.4):
     """Filter Pose estimation based on threshold.
 
     If the confidence is less than `thr`, make the corresponding pose
@@ -138,20 +138,24 @@ def filter_pose(path, thr=0.5):
     with open(path, 'rb') as f:
         annotations = pickle.load(f)
 
-    CONSOLE.print(annotations['keypoint'].shape)
+    if not isinstance(annotations, list):
+        annotations = [annotations]
 
-    for person in [0, 1]:
-        for i in range(0, len(annotations['keypoint_score'][person])):
-            for j in range(0, 17):
-                if annotations['keypoint_score'][person][i][j] < thr:
-                    CONSOLE.print(annotations['keypoint'][person][i][j])
-                    annotations['keypoint'][person][i][j] = 0
-                    CONSOLE.print(annotations['keypoint'][person][i][j])
+    CONSOLE.print(f'Processing {len(annotations)} annotations...',
+                  style='green')
 
-    mmcv.dump(annotations, 'new.pkl')
+    for ann in annotations:
+        n_person = ann['keypoint'].shape[0]
+        for person in range(n_person):
+            for i in range(0, len(ann['keypoint_score'][person])):
+                for j in range(0, 17):
+                    if ann['keypoint_score'][person][i][j] < thr:
+                        ann['keypoint'][person][i][j] = 0
+
+    mmcv.dump(annotations, osp.basename(path))
 
 
-# filter_pose('demo/pose/blowjob.pkl')
+filter_pose('mmaction2/data/phar/pose/kinesphere_train.pkl')
 # -----------------------------------------------------------------------------
 
 
@@ -334,7 +338,7 @@ def extract_subclip(video, start, finish):
             CONSOLE.print(log, style='bold red')
 
 
-# extract_subclip('dataset_2/296.mp4', 241, None)
+# extract_subclip('demos/general-test/276.mp4', 190, 600)
 # -----------------------------------------------------------------------------
 
 
