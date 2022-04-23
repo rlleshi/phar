@@ -1,4 +1,3 @@
-# Copyright (c) OpenMMLab. All rights reserved.
 import argparse
 import os
 import os.path as osp
@@ -9,43 +8,30 @@ import mmcv
 import numpy as np
 import torch
 from mmaction.apis import inference_recognizer, init_recognizer
-from mmaction.utils import import_module_error_func
 from mmcv import DictAction
 from rich.console import Console
 
-CONSOLE = Console()
-
 try:
     from mmdet.apis import inference_detector, init_detector
+except (ImportError, ModuleNotFoundError):
+    raise ImportError('Failed to import `inference_detector` and '
+                      '`init_detector` form `mmdet.apis`. These apis are '
+                      'required in this demo! ')
+
+try:
     from mmpose.apis import (inference_top_down_pose_model, init_pose_model,
                              vis_pose_result)
 except (ImportError, ModuleNotFoundError):
-
-    @import_module_error_func('mmdet')
-    def inference_detector(*args, **kwargs):
-        pass
-
-    @import_module_error_func('mmdet')
-    def init_detector(*args, **kwargs):
-        pass
-
-    @import_module_error_func('mmpose')
-    def init_pose_model(*args, **kwargs):
-        pass
-
-    @import_module_error_func('mmpose')
-    def inference_top_down_pose_model(*args, **kwargs):
-        pass
-
-    @import_module_error_func('mmpose')
-    def vis_pose_result(*args, **kwargs):
-        pass
-
+    raise ImportError('Failed to import `inference_top_down_pose_model`, '
+                      '`init_pose_model`, and `vis_pose_result` form '
+                      '`mmpose.apis`. These apis are required in this demo! ')
 
 try:
     import moviepy.editor as mpy
 except ImportError:
     raise ImportError('Please install moviepy to enable output file')
+
+CONSOLE = Console()
 
 FONTFACE = cv2.FONT_HERSHEY_DUPLEX
 FONTSCALE = 0.85
@@ -94,7 +80,7 @@ def parse_args():
         help='human pose estimation checkpoint file/url')
     parser.add_argument('--det-score-thr',
                         type=float,
-                        default=0.9,
+                        default=0.5,
                         help='the threshold of human detection score')
     parser.add_argument('--label-map',
                         default='tools/data/skeleton/label_map_ntu120.txt',
@@ -117,12 +103,12 @@ def parse_args():
         "'--cfg-options model.backbone.depth=18 model.backbone.with_cp=True'")
     parser.add_argument('--pose-score-thr',
                         type=float,
-                        default=0.6,
+                        default=0.4,
                         help='pose estimation score threshold')
     parser.add_argument(
         '--correct-rate',
         type=float,
-        default=0.5,
+        default=0.4,
         help=('if less than this rate of frame poses have a '
               'lower confidence than `poses-score-thr`, skip the demo'))
     args = parser.parse_args()
@@ -251,7 +237,10 @@ def main():
     for i, poses in enumerate(pose_results):
         for j, pose in enumerate(poses):
             pose = pose['keypoints']
-            keypoint[j, i] = pose[:, :2]
+            try:
+                keypoint[j, i] = pose[:, :2]
+            except IndexError:
+                continue
             keypoint_score[j, i] = pose[:, 2]
 
     fake_anno['keypoint'] = keypoint
@@ -262,7 +251,7 @@ def main():
         for i in range(0, num_frame):
             for j in range(0, 17):  # 17 defined keypoints
                 if fake_anno['keypoint_score'][k][i][j] < args.pose_score_thr:
-                    fake_anno['keypoint'][k][i][j] = 0
+                    # fake_anno['keypoint'][k][i][j] = 0
                     count_0 += 1
 
     correct_rate = 1 - round(count_0 / (num_person * num_frame * 17), 3)
@@ -270,6 +259,9 @@ def main():
         CONSOLE.print((f'Clip has correct rate of {correct_rate} lower than '
                        f'the threshold of {args.correct_rate}. Skipping...'),
                       style='red')
+        tmp_frame_dir = osp.dirname(frame_paths[0])
+        shutil.rmtree(tmp_frame_dir)
+        return
 
     results = inference_recognizer(model, fake_anno)
 
