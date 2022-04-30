@@ -1,36 +1,31 @@
 # * dataset settings
 dataset_type = 'AudioFeatureDataset'
 data_root = ('/home/rejnald/projects/side_projects/phar/mmaction2/data/phar/'
-             '2s-clips/audio_feature/filtered_20/')
+             'audio_feature/filtered_30/')
 data_root_val = data_root
 data_root_test = data_root
 ann_file_train = f'{data_root}/train.txt'
 ann_file_val = f'{data_root_val}/val.txt'
-ann_file_test = f'{data_root_test}/test_anal.txt'
+ann_file_test = f'{data_root_test}/test.txt'
 num_classes = 4
 
 # * model settings
 model = dict(
     type='AudioRecognizer',
-    backbone=dict(type='ResNetAudio',
-                  depth=101,
-                  pretrained=None,
-                  in_channels=1,
-                  norm_eval=False),
-    cls_head=dict(
-        type='AudioTSNHead',
-        num_classes=num_classes,
-        in_channels=1024,
-        dropout_ratio=0.7,  # TODO: 0.6 - 0.8
-        init_std=0.01,
-        topk=(1, 2, 3, 4, 5)),
+    backbone=dict(type='ResNet', depth=18, in_channels=1, norm_eval=False),
+    cls_head=dict(type='AudioTSNHead',
+                  num_classes=num_classes,
+                  in_channels=512,
+                  dropout_ratio=0.7,
+                  init_std=0.01,
+                  topk=(1, 2, 3, 4, 5)),
     # model training and testing settings
     train_cfg=None,
     test_cfg=dict(average_clips='prob'))
 
 train_pipeline = [
     dict(type='LoadAudioFeature'),
-    dict(type='SampleFrames', clip_len=64, frame_interval=1, num_clips=1),
+    dict(type='SampleFrames', clip_len=72, frame_interval=1, num_clips=1),
     dict(type='AudioFeatureSelector'),
     dict(type='FormatAudioShape', input_format='NCTF'),
     dict(type='Collect', keys=['audios', 'label'], meta_keys=[]),
@@ -39,7 +34,7 @@ train_pipeline = [
 val_pipeline = [
     dict(type='LoadAudioFeature'),
     dict(type='SampleFrames',
-         clip_len=64,
+         clip_len=72,
          frame_interval=1,
          num_clips=1,
          test_mode=True),
@@ -51,17 +46,17 @@ val_pipeline = [
 test_pipeline = [
     dict(type='LoadAudioFeature'),
     dict(type='SampleFrames',
-         clip_len=64,
+         clip_len=72,
          frame_interval=1,
-         num_clips=10,
+         num_clips=1,
          test_mode=True),
     dict(type='AudioFeatureSelector'),
     dict(type='FormatAudioShape', input_format='NCTF'),
     dict(type='Collect', keys=['audios', 'label'], meta_keys=[]),
     dict(type='ToTensor', keys=['audios'])
 ]
-data = dict(videos_per_gpu=16,
-            workers_per_gpu=1,
+data = dict(videos_per_gpu=32,
+            workers_per_gpu=2,
             test_dataloader=dict(videos_per_gpu=1, workers_per_gpu=1),
             val_dataloader=dict(videos_per_gpu=1, workers_per_gpu=1),
             train=dict(type=dataset_type,
@@ -86,7 +81,7 @@ eval_config = dict(metric_options=dict(top_k_accuracy=dict(topk=(1, 2, 3, 4,
                                                                  5))), )
 
 # optimizer
-optimizer = dict(type='SGD', lr=0.025, momentum=0.9,
+optimizer = dict(type='SGD', lr=0.1, momentum=0.9,
                  weight_decay=0.0001)  # this lr is used for 8 gpus
 optimizer_config = dict(grad_clip=dict(max_norm=40, norm_type=2))
 # learning policy
@@ -104,7 +99,11 @@ log_config = dict(
 # runtime settings
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-load_from = None
+load_from = (
+    'https://download.openmmlab.com/mmaction/recognition/'
+    'audio_recognition/tsn_r18_64x1x1_100e_kinetics400_audio_feature/'
+    'tsn_r18_64x1x1_100e_kinetics400_audio_feature_20201012-bf34df6c.pth')
+# load_from=None
 resume_from = None
 workflow = [('train', 1)]
 

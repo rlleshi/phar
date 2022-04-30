@@ -1,25 +1,29 @@
-
 # * dataset settings
 dataset_type = 'AudioFeatureDataset'
 data_root = ('/home/rejnald/projects/side_projects/phar/mmaction2/data/phar/'
-             'audio_feature/')
+             'audio_feature/filtered_30/')
 data_root_val = data_root
 data_root_test = data_root
 ann_file_train = f'{data_root}/train.txt'
 ann_file_val = f'{data_root_val}/val.txt'
-ann_file_test = f'{data_root_test}/test.txt'
+ann_file_test = f'{data_root_test}/val.txt'
 num_classes = 4
 
 # * model settings
 model = dict(
     type='AudioRecognizer',
-    backbone=dict(type='ResNet', depth=18, in_channels=1, norm_eval=False),
+    backbone=dict(type='ResNetAudio',
+                  depth=101,
+                  pretrained=None,
+                  in_channels=1,
+                  norm_eval=False),
     cls_head=dict(
         type='AudioTSNHead',
         num_classes=num_classes,
-        in_channels=512,
-        dropout_ratio=0.5,
-        init_std=0.01),
+        in_channels=1024,
+        dropout_ratio=0.5,  # TODO: 0.6 - 0.8
+        init_std=0.01,
+        topk=(1, 2, 3, 4, 5)),
     # model training and testing settings
     train_cfg=None,
     test_cfg=dict(average_clips='prob'))
@@ -34,12 +38,11 @@ train_pipeline = [
 ]
 val_pipeline = [
     dict(type='LoadAudioFeature'),
-    dict(
-        type='SampleFrames',
-        clip_len=64,
-        frame_interval=1,
-        num_clips=1,
-        test_mode=True),
+    dict(type='SampleFrames',
+         clip_len=64,
+         frame_interval=1,
+         num_clips=1,
+         test_mode=True),
     dict(type='AudioFeatureSelector'),
     dict(type='FormatAudioShape', input_format='NCTF'),
     dict(type='Collect', keys=['audios', 'label'], meta_keys=[]),
@@ -47,57 +50,51 @@ val_pipeline = [
 ]
 test_pipeline = [
     dict(type='LoadAudioFeature'),
-    dict(
-        type='SampleFrames',
-        clip_len=64,
-        frame_interval=1,
-        num_clips=1,
-        test_mode=True),
+    dict(type='SampleFrames',
+         clip_len=64,
+         frame_interval=1,
+         num_clips=10,
+         test_mode=True),
     dict(type='AudioFeatureSelector'),
     dict(type='FormatAudioShape', input_format='NCTF'),
     dict(type='Collect', keys=['audios', 'label'], meta_keys=[]),
     dict(type='ToTensor', keys=['audios'])
 ]
-data = dict(
-    videos_per_gpu=64,
-    workers_per_gpu=1,
-    test_dataloader=dict(videos_per_gpu=1, workers_per_gpu=1),
-    val_dataloader=dict(videos_per_gpu=1, workers_per_gpu=1),
-    train=dict(
-        type=dataset_type,
-        ann_file=ann_file_train,
-        data_prefix='',
-        pipeline=train_pipeline),
-    val=dict(
-        type=dataset_type,
-        ann_file=ann_file_val,
-        data_prefix='',
-        pipeline=val_pipeline),
-    test=dict(
-        type=dataset_type,
-        ann_file=ann_file_test,
-        data_prefix='',
-        pipeline=test_pipeline))
+data = dict(videos_per_gpu=16,
+            workers_per_gpu=1,
+            test_dataloader=dict(videos_per_gpu=1, workers_per_gpu=1),
+            val_dataloader=dict(videos_per_gpu=1, workers_per_gpu=1),
+            train=dict(type=dataset_type,
+                       ann_file=ann_file_train,
+                       data_prefix='',
+                       pipeline=train_pipeline),
+            val=dict(type=dataset_type,
+                     ann_file=ann_file_val,
+                     data_prefix='',
+                     pipeline=val_pipeline),
+            test=dict(type=dataset_type,
+                      ann_file=ann_file_test,
+                      data_prefix='',
+                      pipeline=test_pipeline))
 # set the top-k accuracy during validation
 evaluation = dict(
     interval=5,  # Interval to perform evaluation
-    metric_options=dict(
-        top_k_accuracy=dict(topk=(1, 2, 3, 4, 5))),)
+    metric_options=dict(top_k_accuracy=dict(topk=(1, 2, 3, 4, 5))),
+)
 # set the top-k accuracy during testing
-eval_config = dict(
-    metric_options=dict(top_k_accuracy=dict(topk=(1, 2, 3, 4, 5))),)
+eval_config = dict(metric_options=dict(top_k_accuracy=dict(topk=(1, 2, 3, 4,
+                                                                 5))), )
 
 # optimizer
-optimizer = dict(
-    type='SGD', lr=0.1, momentum=0.9,
-    weight_decay=0.0001)  # this lr is used for 8 gpus
+optimizer = dict(type='SGD', lr=0.0025, momentum=0.9,
+                 weight_decay=0.0001)  # this lr is used for 8 gpus
 optimizer_config = dict(grad_clip=dict(max_norm=40, norm_type=2))
 # learning policy
 lr_config = dict(policy='CosineAnnealing', min_lr=0)
-total_epochs = 480
+total_epochs = 200
 
 # * runtime settings
-checkpoint_config = dict(interval=10)
+checkpoint_config = dict(interval=20)
 log_config = dict(
     interval=20,
     hooks=[
