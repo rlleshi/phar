@@ -80,7 +80,7 @@ def parse_args():
         help='human pose estimation checkpoint file/url')
     parser.add_argument('--det-score-thr',
                         type=float,
-                        default=0.5,
+                        default=0.8,
                         help='the threshold of human detection score')
     parser.add_argument('--label-map',
                         default='tools/data/skeleton/label_map_ntu120.txt',

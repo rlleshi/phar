@@ -126,11 +126,11 @@ def merge_pose(path, split, level=2):
 # -----------------------------------------------------------------------------
 
 
-def filter_pose(path, thr=0.4):
-    """Filter Pose estimation based on threshold.
+def filter_pose(path, thr=0.4, correct_rate=0.5, filter_pose=False):
+    """Filter Pose estimation based on threshold & correct rate.
 
-    If the confidence is less than `thr`, make the corresponding pose
-    prediction 0.
+    Optionally, if the confidence is less than `thr`, make the corresponding
+    pose prediction 0.
     """
     import pickle
     import mmcv
@@ -143,19 +143,30 @@ def filter_pose(path, thr=0.4):
 
     CONSOLE.print(f'Processing {len(annotations)} annotations...',
                   style='green')
-
+    new_annotations = []
     for ann in annotations:
+        count = 0
         n_person = ann['keypoint'].shape[0]
         for person in range(n_person):
-            for i in range(0, len(ann['keypoint_score'][person])):
+            n_frames = len(ann['keypoint_score'][person])
+            for i in range(0, n_frames):
                 for j in range(0, 17):
                     if ann['keypoint_score'][person][i][j] < thr:
-                        ann['keypoint'][person][i][j] = 0
+                        if filter_pose:
+                            ann['keypoint'][person][i][j] = 0
+                        count += 1
+        temp_correct_rate = count / (n_person * n_frames * 17)
+        if temp_correct_rate > correct_rate:
+            new_annotations.append(ann)
 
+    CONSOLE.print(f'Dumping {len(new_annotations)} annotations.',
+                  style='green')
     mmcv.dump(annotations, osp.basename(path))
 
 
-filter_pose('mmaction2/data/phar/pose/kinesphere_train.pkl')
+filter_pose('mmaction2/data/phar/pose/kinesphere_train.pkl',
+            thr=0.5,
+            correct_rate=0.5)
 # -----------------------------------------------------------------------------
 
 
