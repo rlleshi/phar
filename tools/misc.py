@@ -1,3 +1,4 @@
+import glob
 import os
 import os.path as osp
 import subprocess
@@ -27,6 +28,7 @@ CONSOLE = Console()
 #   2.2 resize(): resize videos using MoviePy
 #   2.3 extract_subclip(): extract a subclip from a video
 #   2.4 extract_frames_from_video(): extract frame from a video
+#   2.5 trim_dataset(): shuffles and removes part of dataset
 #
 # 3. Miscellaneous
 #   3.1 gen_id(): generates a 'random' ID
@@ -37,8 +39,11 @@ CONSOLE = Console()
 #   3.6 long_video_demo(): based on MMAction2
 #   3.7 demo_posec3d(): based on MMaction2
 #
-# 4. Obscure
-#   4.1 merge_train_test()
+# 4. Dataset Stuff
+#   4.1 gen_single_ann_file(): generates annotation file for a single class
+#
+# 5. Obscure
+#   5.1 merge_train_test()
 
 
 def visualize_heatmaps(src_dir='mmaction2/data/phar',
@@ -164,9 +169,9 @@ def filter_pose(path, thr=0.4, correct_rate=0.5, filter_pose=False):
     mmcv.dump(annotations, osp.basename(path))
 
 
-filter_pose('mmaction2/data/phar/pose/kinesphere_train.pkl',
-            thr=0.5,
-            correct_rate=0.5)
+# filter_pose('mmaction2/data/phar/pose/kinesphere_train.pkl',
+#             thr=0.5,
+#             correct_rate=0.5)
 # -----------------------------------------------------------------------------
 
 
@@ -371,6 +376,53 @@ def extract_frames_from_video(video_path, pos=0, dims=None):
 
 # for i in np.arange(10, 20, 1):
 #     extract_frames_from_video('thesis-har/tsn_gradcam.mp4', i)s
+# -----------------------------------------------------------------------------
+
+
+def trim_dataset(path, keep_rate):
+    """Remove videos from a directory based on keep_rate.
+
+    Args:
+        path (str): path to dataset
+        keep_rate (float): % of items to keep
+    """
+    items = os.listdir(path)
+    np.random.seed()
+    np.random.shuffle(items)
+    items = np.random.choice(items, int(len(items) * keep_rate))
+    for item in glob.glob(f'{path}/*'):
+        if osp.basename(item) not in items:
+            os.remove(item)
+    CONSOLE.print(f'Trimmed {path}. {len(items)} videos remaining.',
+                  style='green')
+
+
+# trim_dataset('mmaction2/data/phar/audio/pathhere', 0.14)
+# -----------------------------------------------------------------------------
+
+
+def gen_single_ann_file(path, label, id):
+    """Generate the annotation file for a single class. Id must be given.
+
+    Works for audios so far.
+
+    Args:
+        path (str): path to data directory
+        label (_type_): label of class
+        id (_type_): id to write in annotation file
+    """
+    for split in ['train', 'val']:
+        out = f'{split}.txt'
+        with open(out, 'w') as out_f:
+            for item in glob.glob(osp.join(path, split, label) + '/*'):
+                count = len(np.load(item))
+                out_f.write(f'{item} {count} {id}\n')
+        CONSOLE.print(f'Generated {out}', style='green')
+
+
+gen_single_ann_file('mmaction2/data/phar/audio_feature/filtered_20/',
+                    'miscellaneous', 2)
+
 # -----------------------------------------------------------------------------
 
 
