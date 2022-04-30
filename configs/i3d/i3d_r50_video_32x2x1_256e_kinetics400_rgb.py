@@ -6,7 +6,7 @@ data_root_test = data_root
 ann_file_train = f'{data_root}/train.txt'
 ann_file_val = f'{data_root_val}/val.txt'
 ann_file_test = f'{data_root_test}/test.txt'
-num_classes = 18
+num_classes = 17
 
 # * model settings
 model = dict(
@@ -27,7 +27,7 @@ model = dict(
                   num_classes=num_classes,
                   in_channels=2048,
                   spatial_type='avg',
-                  dropout_ratio=0.5,
+                  dropout_ratio=0.6,
                   init_std=0.01,
                   topk=(1, 2, 3, 4, 5)),
     # model training and testing settings
@@ -88,7 +88,7 @@ test_pipeline = [
     dict(type='ToTensor', keys=['imgs'])
 ]
 
-data = dict(videos_per_gpu=4,
+data = dict(videos_per_gpu=8,
             workers_per_gpu=1,
             test_dataloader=dict(videos_per_gpu=1, workers_per_gpu=1),
             val_dataloader=dict(videos_per_gpu=1, workers_per_gpu=1),
@@ -120,15 +120,11 @@ eval_config = dict(metric_options=dict(top_k_accuracy=dict(topk=(1, 2, 3, 4,
                                                                  5))), )
 
 # * optimizer
-optimizer = dict(
-    type='SGD',
-    lr=0.005,  # this lr is used for 8 gpus
-    momentum=0.9,
-    weight_decay=0.0001)
+optimizer = dict(type='SGD', lr=0.0125, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=dict(max_norm=40, norm_type=2))
 # learning policy
 lr_config = dict(policy='step', step=[40, 80])
-total_epochs = 100
+total_epochs = 256
 
 # * runtime settings
 checkpoint_config = dict(interval=5)

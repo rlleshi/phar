@@ -1,13 +1,13 @@
 # * dataset settings
 dataset_type = 'AudioFeatureDataset'
 data_root = ('/home/rejnald/projects/side_projects/phar/mmaction2/data/phar/'
-             'audio_feature/filtered_30/')
+             'audio_feature/filtered_20/')
 data_root_val = data_root
 data_root_test = data_root
 ann_file_train = f'{data_root}/train.txt'
 ann_file_val = f'{data_root_val}/val.txt'
 ann_file_test = f'{data_root_test}/test.txt'
-num_classes = 4
+num_classes = 3
 
 # * model settings
 model = dict(
@@ -25,7 +25,7 @@ model = dict(
 
 train_pipeline = [
     dict(type='LoadAudioFeature'),
-    dict(type='SampleFrames', clip_len=72, frame_interval=1, num_clips=1),
+    dict(type='SampleFrames', clip_len=64, frame_interval=2, num_clips=1),
     dict(type='AudioFeatureSelector'),
     dict(type='FormatAudioShape', input_format='NCTF'),
     dict(type='Collect', keys=['audios', 'label'], meta_keys=[]),
@@ -34,8 +34,8 @@ train_pipeline = [
 val_pipeline = [
     dict(type='LoadAudioFeature'),
     dict(type='SampleFrames',
-         clip_len=72,
-         frame_interval=1,
+         clip_len=64,
+         frame_interval=2,
          num_clips=1,
          test_mode=True),
     dict(type='AudioFeatureSelector'),
@@ -46,8 +46,8 @@ val_pipeline = [
 test_pipeline = [
     dict(type='LoadAudioFeature'),
     dict(type='SampleFrames',
-         clip_len=72,
-         frame_interval=1,
+         clip_len=64,
+         frame_interval=2,
          num_clips=1,
          test_mode=True),
     dict(type='AudioFeatureSelector'),
@@ -86,7 +86,7 @@ optimizer = dict(type='SGD', lr=0.1, momentum=0.9,
 optimizer_config = dict(grad_clip=dict(max_norm=40, norm_type=2))
 # learning policy
 lr_config = dict(policy='CosineAnnealing', min_lr=0)
-total_epochs = 240
+total_epochs = 200
 
 # * runtime settings
 checkpoint_config = dict(interval=20)
