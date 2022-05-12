@@ -22,6 +22,7 @@ CONSOLE = Console()
 #   1.3 read_pickel(): examines the pose information
 #   1.4 convert_pose_label(): e.g. from (general) annotations.txt to pose_ann
 #   1.5 visualize_heatmaps(): visualize groups of poses' heatmaps
+#   1.6 extract_labels_pose(): extracts the label maps from poses
 #
 # 2. Video Manipulation
 #   2.1 merge_videos(): with MoviePy
@@ -44,6 +45,20 @@ CONSOLE = Console()
 #
 # 5. Obscure
 #   5.1 merge_train_test()
+
+
+def extract_labels_pose(path: str):
+    import pickle
+    with open(path, 'rb') as f:
+        annotations = pickle.load(f)
+    out_f = osp.splitext(path)[0] + '.txt'
+    with open(out_f, 'w') as out:
+        for row in annotations:
+            out.write(f"{row['frame_dir']} {row['label']}\n")
+
+
+extract_labels_pose('mmaction2/data/phar/pose/kinesphere_val.pkl')
+# -----------------------------------------------------------------------------
 
 
 def visualize_heatmaps(src_dir='mmaction2/data/phar',
@@ -401,7 +416,7 @@ def trim_dataset(path, keep_rate):
 # -----------------------------------------------------------------------------
 
 
-def gen_single_ann_file(path, label, id):
+def gen_single_ann_file(path, label, id, splits=['train', 'val'], audio=False):
     """Generate the annotation file for a single class. Id must be given.
 
     Works for audios so far.
@@ -411,17 +426,19 @@ def gen_single_ann_file(path, label, id):
         label (_type_): label of class
         id (_type_): id to write in annotation file
     """
-    for split in ['train', 'val']:
+    for split in splits:
         out = f'{split}.txt'
         with open(out, 'w') as out_f:
             for item in glob.glob(osp.join(path, split, label) + '/*'):
-                count = len(np.load(item))
-                out_f.write(f'{item} {count} {id}\n')
+                if audio:
+                    count = len(np.load(item))
+                    out_f.write(f'{item} {count} {id}\n')
+                else:
+                    out_f.write(f'{item} {id}\n')
         CONSOLE.print(f'Generated {out}', style='green')
 
 
-gen_single_ann_file('mmaction2/data/phar/audio_feature/filtered_20/',
-                    'miscellaneous', 2)
+# gen_single_ann_file('mmaction2/data/phar/', 'scoop_up', 13, ['val'])
 
 # -----------------------------------------------------------------------------
 

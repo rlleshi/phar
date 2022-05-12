@@ -153,8 +153,9 @@ def main():
             CONSOLE.print(f'Last saved checkpoint not found @{args.work_dir}',
                           style='yellow')
         else:
-            # last_model[1] because the first is the top model
-            mlflow.log_artifact(osp.join(args.work_dir, last_model[1]))
+            last_model = list(
+                filter(lambda x: not x.startswith('best'), last_model))
+            mlflow.log_artifact(osp.join(args.work_dir, last_model[0]))
 
         train_acc, val_acc = get_train_val_acc(logs)
 
