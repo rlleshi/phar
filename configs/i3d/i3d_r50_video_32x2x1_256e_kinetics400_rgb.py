@@ -5,7 +5,7 @@ data_root_val = data_root
 data_root_test = data_root
 ann_file_train = f'{data_root}/train.txt'
 ann_file_val = f'{data_root_val}/val.txt'
-ann_file_test = f'{data_root_test}/test.txt'
+ann_file_test = f'{data_root_test}/val.txt'
 num_classes = 17
 
 # * model settings
@@ -27,7 +27,7 @@ model = dict(
                   num_classes=num_classes,
                   in_channels=2048,
                   spatial_type='avg',
-                  dropout_ratio=0.6,
+                  dropout_ratio=0.7,
                   init_std=0.01,
                   topk=(1, 2, 3, 4, 5)),
     # model training and testing settings
@@ -77,7 +77,7 @@ test_pipeline = [
     dict(type='SampleFrames',
          clip_len=32,
          frame_interval=2,
-         num_clips=10,
+         num_clips=8,
          test_mode=True),
     dict(type='DecordDecode'),
     dict(type='Resize', scale=(-1, 256)),
@@ -88,7 +88,7 @@ test_pipeline = [
     dict(type='ToTensor', keys=['imgs'])
 ]
 
-data = dict(videos_per_gpu=8,
+data = dict(videos_per_gpu=4,
             workers_per_gpu=1,
             test_dataloader=dict(videos_per_gpu=1, workers_per_gpu=1),
             val_dataloader=dict(videos_per_gpu=1, workers_per_gpu=1),
@@ -120,21 +120,20 @@ eval_config = dict(metric_options=dict(top_k_accuracy=dict(topk=(1, 2, 3, 4,
                                                                  5))), )
 
 # * optimizer
-optimizer = dict(type='SGD', lr=0.0125, momentum=0.9, weight_decay=0.0001)
+optimizer = dict(type='SGD', lr=0.00625, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=dict(max_norm=40, norm_type=2))
 # learning policy
 lr_config = dict(policy='step', step=[40, 80])
 total_epochs = 256
 
 # * runtime settings
-checkpoint_config = dict(interval=5)
+checkpoint_config = dict(interval=3)
 log_config = dict(
-    interval=20,
+    interval=200,
     hooks=[
         dict(type='TextLoggerHook'),
         # dict(type='TensorboardLoggerHook'),
     ])
-# runtime settings
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
 load_from = ('https://download.openmmlab.com/mmaction/'
