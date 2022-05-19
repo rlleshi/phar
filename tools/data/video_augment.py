@@ -61,7 +61,7 @@ def augment_video(clip: str, out_dir: str):
     video = cv2.VideoCapture(clip)
     out = osp.join(out_dir, osp.basename(clip))
     video_writer = cv2.VideoWriter(
-        out, cv2.VideoWriter_fourcc(*'MP4V'), video.get(cv2.CAP_PROP_FPS),
+        out, cv2.VideoWriter_fourcc(*'mp4v'), video.get(cv2.CAP_PROP_FPS),
         (round(video.get(cv2.CAP_PROP_FRAME_WIDTH)),
          round(video.get(cv2.CAP_PROP_FRAME_HEIGHT))))
 
@@ -95,6 +95,7 @@ def main():
             if clip not in random_clips:
                 shutil.copy(clip, out_dir_label)
             else:
+                # TODO: multiprocessing
                 augment_video(clip, out_dir_label)
 
 

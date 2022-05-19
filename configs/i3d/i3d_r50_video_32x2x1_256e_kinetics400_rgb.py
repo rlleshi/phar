@@ -3,7 +3,7 @@ dataset_type = 'VideoDataset'
 data_root = '/home/rejnald/projects/side_projects/phar/mmaction2/data/phar/'
 data_root_val = data_root
 data_root_test = data_root
-ann_file_train = f'{data_root}/train.txt'
+ann_file_train = f'{data_root}/train_aug.txt'
 ann_file_val = f'{data_root_val}/val.txt'
 ann_file_test = f'{data_root_test}/val.txt'
 num_classes = 17
@@ -27,7 +27,7 @@ model = dict(
                   num_classes=num_classes,
                   in_channels=2048,
                   spatial_type='avg',
-                  dropout_ratio=0.7,
+                  dropout_ratio=0.8,
                   init_std=0.01,
                   topk=(1, 2, 3, 4, 5)),
     # model training and testing settings
@@ -127,7 +127,7 @@ lr_config = dict(policy='step', step=[40, 80])
 total_epochs = 256
 
 # * runtime settings
-checkpoint_config = dict(interval=3)
+checkpoint_config = dict(interval=2)
 log_config = dict(
     interval=200,
     hooks=[

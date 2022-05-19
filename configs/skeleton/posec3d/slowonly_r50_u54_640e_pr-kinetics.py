@@ -1,8 +1,6 @@
 # * dataset settings
 dataset_type = 'PoseDataset'
-# data_root = ('/home/rejnald/projects/side_projects/phar/mmaction2/data/'
-#              'phar/pose/')
-data_root = ('/mmaction2/data/')
+data_root = ('/home/jovyan/mmaction2/data')
 data_root_val = data_root
 data_root_test = data_root
 ann_file_train = f'{data_root}/kinesphere_train.pkl'
@@ -32,7 +30,7 @@ model = dict(type='Recognizer3D',
                            in_channels=512,
                            num_classes=num_classes,
                            spatial_type='avg',
-                           dropout_ratio=0.7,
+                           dropout_ratio=0.8,
                            topk=(1, 2, 3, 4, 5)),
              train_cfg=dict(),
              test_cfg=dict(average_clips='prob'))
@@ -40,7 +38,7 @@ model = dict(type='Recognizer3D',
 train_pipeline = [
     # * 54 (25% of 210) sampled frames seems better
     # 48 frames = 22.8%
-    dict(type='UniformSampleFrames', clip_len=54),
+    dict(type='UniformSampleFrames', clip_len=64),
     dict(type='PoseDecode'),
     dict(type='PoseCompact', hw_ratio=1., allow_imgpad=True),
     dict(type='Resize', scale=(-1, 64)),
@@ -57,7 +55,7 @@ train_pipeline = [
     dict(type='ToTensor', keys=['imgs', 'label'])
 ]
 val_pipeline = [
-    dict(type='UniformSampleFrames', clip_len=54, num_clips=1, test_mode=True),
+    dict(type='UniformSampleFrames', clip_len=64, num_clips=1, test_mode=True),
     dict(type='PoseDecode'),
     dict(type='PoseCompact', hw_ratio=1., allow_imgpad=True),
     dict(type='Resize', scale=(-1, 64)),
@@ -72,7 +70,7 @@ val_pipeline = [
     dict(type='ToTensor', keys=['imgs'])
 ]
 test_pipeline = [
-    dict(type='UniformSampleFrames', clip_len=54, num_clips=10,
+    dict(type='UniformSampleFrames', clip_len=64, num_clips=10,
          test_mode=True),
     dict(type='PoseDecode'),
     dict(type='PoseCompact', hw_ratio=1., allow_imgpad=True),
@@ -90,7 +88,7 @@ test_pipeline = [
     dict(type='Collect', keys=['imgs', 'label'], meta_keys=[]),
     dict(type='ToTensor', keys=['imgs'])
 ]
-data = dict(videos_per_gpu=16,
+data = dict(videos_per_gpu=12,
             workers_per_gpu=2,
             test_dataloader=dict(videos_per_gpu=1),
             train=dict(type=dataset_type,
@@ -107,13 +105,13 @@ data = dict(videos_per_gpu=16,
                       pipeline=test_pipeline))
 
 # optimizer
-optimizer = dict(type='SGD', lr=0.1, momentum=0.9,
+optimizer = dict(type='SGD', lr=0.0375, momentum=0.9,
                  weight_decay=0.0003)  # this lr is used for 8 gpus
 optimizer_config = dict(grad_clip=dict(max_norm=40, norm_type=2))
 
 # learning policy
 lr_config = dict(policy='CosineAnnealing', by_epoch=False, min_lr=0)
-total_epochs = 640
+total_epochs = 480
 checkpoint_config = dict(interval=40)
 workflow = [('train', 10)]
 evaluation = dict(interval=5,
@@ -132,6 +130,5 @@ load_from = (
     'slowonly_kinetics400_pretrained_r50_u48_120e_ucf101_split1_keypoint/'
     'slowonly_kinetics400_pretrained_r50_u48_120e_ucf101_split1_keypoint'
     '-cae8aa4a.pth')
-load_from = None
 resume_from = None
 find_unused_parameters = False

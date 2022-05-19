@@ -3,7 +3,7 @@ dataset_type = 'VideoDataset'
 data_root = '/home/rejnald/projects/side_projects/phar/mmaction2/data/phar/'
 data_root_val = data_root
 data_root_test = data_root
-ann_file_train = f'{data_root}/train.txt'
+ann_file_train = f'{data_root}/train_aug.txt'
 ann_file_val = f'{data_root_val}/val.txt'
 ann_file_test = f'{data_root_test}/val.txt'
 num_classes = 17
@@ -23,7 +23,7 @@ model = dict(
         patch_size=16,
         embed_dims=768,
         in_channels=3,
-        dropout_ratio=0.5,
+        dropout_ratio=0.2,
         transformer_layers=None,
         # divided attention is the best strategy
         attention_type='divided_space_time',
@@ -79,7 +79,7 @@ test_pipeline = [
     dict(type='Collect', keys=['imgs', 'label'], meta_keys=[]),
     dict(type='ToTensor', keys=['imgs', 'label'])
 ]
-data = dict(videos_per_gpu=2,
+data = dict(videos_per_gpu=1,
             workers_per_gpu=1,
             test_dataloader=dict(videos_per_gpu=1, workers_per_gpu=1),
             val_dataloader=dict(videos_per_gpu=1, workers_per_gpu=1),
@@ -107,7 +107,7 @@ eval_config = dict(metric_options=dict(top_k_accuracy=dict(topk=(1, 2, 3, 4,
 
 # optimizer
 optimizer = dict(type='SGD',
-                 lr=0.003125,
+                 lr=0.0015625,
                  momentum=0.9,
                  paramwise_cfg=dict(
                      custom_keys={
@@ -121,12 +121,12 @@ optimizer_config = dict(grad_clip=dict(max_norm=40, norm_type=2))
 
 # learning policy
 lr_config = dict(policy='step', step=[5, 10])
-total_epochs = 15
+total_epochs = 20
 
 # * runtime settings
 checkpoint_config = dict(interval=1)
 log_config = dict(
-    interval=200,
+    interval=1000,
     hooks=[
         dict(type='TextLoggerHook'),
         # dict(type='TensorboardLoggerHook'),

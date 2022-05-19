@@ -15,6 +15,12 @@ def annotations_dic(annotations):
     return {label: i for i, label in enumerate(labels)}
 
 
+def annotations_dict_rev(annotations):
+    """Given an annotation file return a dictionary {index: label} of them."""
+    result = annotations_dic(annotations)
+    return {v: k for k, v in result.items()}
+
+
 def gen_id(size=8):
     """Generate a random id."""
     chars = string.ascii_uppercase + string.digits
