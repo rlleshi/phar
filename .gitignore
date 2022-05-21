@@ -140,3 +140,5 @@ mlruns/
 demos/
 annotator/via-3.0.11/
 checkpoints/
+temp/
+tmp/
