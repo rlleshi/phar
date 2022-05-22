@@ -147,20 +147,22 @@ def pose_inference(frame_paths, det_results):
     return ret
 
 
-def cleanup(original_video, video, out_video):
+def cleanup(original_video, tmp_out_video, out_video):
     """Add audio to video & cleanup."""
     cmd_extract = f'ffmpeg -i {original_video} -f mp3 -ab 192000 -vn audio.mp3'
     os.popen(cmd_extract)
-    cmd_add = (f'ffmpeg -i {video} -i audio.mp3 -c copy -map 0:v:0 '
+    time.sleep(5)
+    cmd_add = (f'ffmpeg -i {tmp_out_video} -i audio.mp3 -c copy -map 0:v:0 '
                f'-map 1:a:0 {out_video}')
+    print(cmd_add)
     os.popen(cmd_add)
+    time.sleep(5)
 
-    time.sleep(3)
     # cleanup
     shutil.rmtree(TEMP)
     shutil.rmtree('./tmp')
     os.remove('audio.mp3')
-    os.remove(video)
+    os.remove(tmp_out_video)
 
 
 def parse_args():
@@ -295,7 +297,7 @@ def skeleton_inference(clip: str, args: dict):
         args (dict): parsed args
     """
     global PREDS
-    if set(list(PREDS[clip]['rgb'].keys())).isdisjoint(POSE_LABELS):
+    if set(list(PREDS[clip]['rgb'].keys())[:3]).isdisjoint(POSE_LABELS):
         CONSOLE.print(f'Skipping {clip} for skeleton inference...',
                       style='yellow')
         PREDS[clip]['pose'] = placeholder
@@ -365,7 +367,7 @@ def skeleton_inference(clip: str, args: dict):
 def audio_inference(clip: str):
     """Audio based action recognition."""
     global PREDS
-    if set(list(PREDS[clip]['rgb'].keys())[:3]).isdisjoint(AUDIO_LABELS):
+    if set(list(PREDS[clip]['rgb'].keys())[:2]).isdisjoint(AUDIO_LABELS):
         CONSOLE.print(f'Skipping {clip} for audio inference...',
                       style='yellow')
         PREDS[clip]['audio'] = placeholder
@@ -407,10 +409,10 @@ def write_results(args):
     Args:
         args (dict): parsed args
     """
-    out_video = f'{osp.splitext(args.out)[0]}_.mp4'
+    tmp_out_video = f'tmp_{osp.splitext(args.out)[0]}.mp4'
     video = cv2.VideoCapture(args.video)
     video_writer = cv2.VideoWriter(
-        out_video, cv2.VideoWriter_fourcc(*'MP4V'),
+        tmp_out_video, cv2.VideoWriter_fourcc(*'MP4V'),
         video.get(cv2.CAP_PROP_FPS),
         (round(video.get(cv2.CAP_PROP_FRAME_WIDTH)),
          round(video.get(cv2.CAP_PROP_FRAME_HEIGHT))))
@@ -450,14 +452,17 @@ def write_results(args):
             for topk in result:
                 if i == args.topk:
                     break
+                # score = topk / 3
+                score = np.interp(topk, [0, 2.1], [0, 1])
                 cv2.putText(frame, result[topk], (x, y * i), FONTFACE,
                             FONTSCALE, FONTCOLOR, THICKNESS, LINETYPE)
-                cv2.putText(frame, str(round(100 * topk / 3, 2)),
+                cv2.putText(frame, str(round(100 * score, 2)),
                             (x + x_y_dist, y * i), FONTFACE, FONTSCALE,
                             FONTCOLOR_SCORE, THICKNESS, LINETYPE)
                 i += 1
             video_writer.write(frame.astype(np.uint8))
-    cleanup(args.original_video, out_video, args.out)
+    video_writer.release()
+    cleanup(args.original_video, tmp_out_video, args.out)
 
 
 # TODO: performance improvement
