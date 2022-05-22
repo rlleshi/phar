@@ -55,9 +55,6 @@ CONSOLE = Console()
 manager = Manager()
 clips = manager.list()
 PREDS = {}
-# DET_MODEL, POSE_MODEL = None, None
-# RGB_MODEL, SK_MODEL, AUDIO_MODEL = None, None, None
-# RGB_LABELS, POSE_LABELS, AUDIO_LABELS = [], [], []
 AUDIO_FEATURE_SCRIPT = 'mmaction2/tools/data/build_audio_features.py'
 LOUD_WEIGHT = None
 TEMP = 'temp'
@@ -75,7 +72,7 @@ def _extract_clip(items):
     ts, video = items
     key = next(iter(ts))
     start, finish = next(iter(ts.values()))
-    if finish - start < 1:
+    if finish - start < 2:
         return
     video = mpy.VideoFileClip(video)
     clip_pth = osp.join(TEMP, f'{key}_{start}_{finish}.mp4')
@@ -345,7 +342,10 @@ def skeleton_inference(clip: str, args: dict):
                 if fake_anno['keypoint_score'][k][i][j] < args.pose_score_thr:
                     # fake_anno['keypoint'][k][i][j] = 0
                     count_0 += 1
-    correct_rate = 1 - round(count_0 / (num_person * num_frame * 17), 3)
+    try:
+        correct_rate = 1 - round(count_0 / (num_person * num_frame * 17), 3)
+    except ZeroDivisionError:
+        correct_rate = 0
     if correct_rate < args.correct_rate:
         CONSOLE.print((f'Clip has correct rate of {correct_rate} lower than '
                        f'the threshold of {args.correct_rate}. Skipping...'),
@@ -365,7 +365,7 @@ def skeleton_inference(clip: str, args: dict):
 def audio_inference(clip: str):
     """Audio based action recognition."""
     global PREDS
-    if set(list(PREDS[clip]['rgb'].keys())).isdisjoint(AUDIO_LABELS):
+    if set(list(PREDS[clip]['rgb'].keys())[:3]).isdisjoint(AUDIO_LABELS):
         CONSOLE.print(f'Skipping {clip} for audio inference...',
                       style='yellow')
         PREDS[clip]['audio'] = placeholder

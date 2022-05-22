@@ -57,7 +57,7 @@ def extract_labels_pose(path: str):
             out.write(f"{row['frame_dir']} {row['label']}\n")
 
 
-extract_labels_pose('mmaction2/data/phar/pose/kinesphere_val.pkl')
+# extract_labels_pose('mmaction2/data/phar/pose/kinesphere_val.pkl')
 # -----------------------------------------------------------------------------
 
 
@@ -369,7 +369,7 @@ def extract_subclip(video, start, finish):
             CONSOLE.print(log, style='bold red')
 
 
-# extract_subclip('demos/general-test/276.mp4', 190, 600)
+extract_subclip('demos/general-test/subclip_561.mp4', 0, 65)
 # -----------------------------------------------------------------------------
 
 

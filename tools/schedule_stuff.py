@@ -73,12 +73,31 @@ def extract_audio_feature(in_dir, out_dir):
     return schedule.CancelJob
 
 
-# schedule.every().sunday.at('22:43').do(extract_audio,
-#                                        in_dir='data/ucf101/videos/',
-#                                        out_dir='data/ucf101/audio/')
+def train_model(config: str,
+                work_dir: str,
+                resume_from=None,
+                cfg_options=None):
+    script_path = 'mmaction2/tools/dist_train.sh'
+    no_gpus = 1
+    subargs = [
+        'bash', script_path, config,
+        str(no_gpus), '--work-dir', work_dir, '--validate'
+    ]
+    if resume_from:
+        subargs.append('--resume-from')
+        subargs.append(resume_from)
+    if cfg_options:
+        subargs.append('--cfg-options')
+        for tup in cfg_options.items():
+            subargs.append(f'{tup[0]}={tup[1]}')
+    subprocess.run(subargs)
 
-schedule.every().thursday.at('05:00').do(
-    pose_feasibility, cat='doggy', out_dir='mmaction2/data/phar/pose/0.4_0.4/')
+
+schedule.every().friday.at('03:30').do(
+    train_model,
+    config=('configs/timesformer/'
+            'timesformer_divST_8x32x1_15e_kinetics400_rgb.py'),
+    work_dir='mmaction2/work_dir/timesformer/')
 
 while True:
     schedule.run_pending()
