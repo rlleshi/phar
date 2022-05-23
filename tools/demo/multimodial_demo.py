@@ -50,11 +50,6 @@ THICKNESS = 1
 LINETYPE = 1
 x, y = 10, 30
 x_y_dist = 200
-
-CONSOLE = Console()
-manager = Manager()
-clips = manager.list()
-PREDS = {}
 AUDIO_FEATURE_SCRIPT = 'mmaction2/tools/data/build_audio_features.py'
 LOUD_WEIGHT = None
 TEMP = 'temp'
@@ -65,6 +60,11 @@ placeholder = {
     'fingering': 0,
     'titjob': 0
 }
+
+CONSOLE = Console()
+manager = Manager()
+clips = manager.list()
+PREDS = {}
 
 
 def _extract_clip(items):
@@ -148,19 +148,19 @@ def pose_inference(frame_paths, det_results):
 
 
 def cleanup(original_video, tmp_out_video, out_video):
-    """Add audio to video & cleanup."""
+    """Add original audio to demo & cleanup."""
+    # extract & add audio to demo
     cmd_extract = f'ffmpeg -i {original_video} -f mp3 -ab 192000 -vn audio.mp3'
     os.popen(cmd_extract)
     time.sleep(5)
     cmd_add = (f'ffmpeg -i {tmp_out_video} -i audio.mp3 -c copy -map 0:v:0 '
                f'-map 1:a:0 {out_video}')
-    print(cmd_add)
     os.popen(cmd_add)
     time.sleep(5)
 
     # cleanup
-    shutil.rmtree(TEMP)
-    shutil.rmtree('./tmp')
+    shutil.rmtree(TEMP, ignore_errors=True)
+    shutil.rmtree('./tmp', ignore_errors=True)
     os.remove('audio.mp3')
     os.remove(tmp_out_video)
 
@@ -306,11 +306,8 @@ def skeleton_inference(clip: str, args: dict):
     frame_paths, original_frames = frame_extraction(clip, args.short_side)
     num_frame = len(frame_paths)
     h, w, _ = original_frames[0].shape
-
-    # get human detection results
     det_results = detection_inference(args.det_score_thr, frame_paths)
     torch.cuda.empty_cache()
-    # get human pose results
     pose_results = pose_inference(frame_paths, det_results)
     torch.cuda.empty_cache()
 
@@ -322,7 +319,6 @@ def skeleton_inference(clip: str, args: dict):
                      modality='Pose',
                      total_frames=num_frame)
     num_person = max([len(x) for x in pose_results])
-
     num_keypoint = 17
     keypoint = np.zeros((num_person, num_frame, num_keypoint, 2),
                         dtype=np.float16)
@@ -392,9 +388,9 @@ def audio_inference(clip: str):
     out_feature = f'{osp.splitext(out_audio)[0]}.npy'
     subargs = ['python', AUDIO_FEATURE_SCRIPT, TEMP, TEMP, '--ext', '.wav']
     subprocess.run(subargs)
+
     results = inference_recognizer(AUDIO_MODEL, out_feature)
     results = [(AUDIO_LABELS[k[0]], k[1]) for k in results]
-
     PREDS[clip]['audio'] = {}
     for r in results:
         PREDS[clip]['audio'][r[0]] = r[1]
@@ -453,7 +449,8 @@ def write_results(args):
                 if i == args.topk:
                     break
                 # score = topk / 3
-                score = np.interp(topk, [0, 2.1], [0, 1])
+                # * best would be to divide the score based on #models
+                score = np.interp(topk, [0, 2.0], [0, 1])
                 cv2.putText(frame, result[topk], (x, y * i), FONTFACE,
                             FONTSCALE, FONTCOLOR, THICKNESS, LINETYPE)
                 cv2.putText(frame, str(round(100 * score, 2)),
@@ -474,9 +471,9 @@ def main():
     RGB_LABELS, POSE_LABELS, AUDIO_LABELS = [
         [x.strip() for x in open(path).readlines()] for path in args.label_maps
     ]
-
     Path(TEMP).mkdir(parents=True, exist_ok=True)
     start_time = time.time()
+
     # resize video
     CONSOLE.print('Resizing video...', style='green')
     video = mpy.VideoFileClip(args.video)
@@ -499,34 +496,36 @@ def main():
         style='green')
     torch.cuda.empty_cache()
 
-    DET_MODEL = init_detector(args.det_config, args.det_checkpoint,
-                              args.device)
-    POSE_MODEL = init_pose_model(args.pose_config, args.pose_checkpoint,
-                                 args.device)
-    SK_MODEL = init_recognizer(mmcv.Config.fromfile(args.skeleton_config),
-                               args.skeleton_checkpoint, args.device)
+    if args.skeleton_checkpoint:
+        DET_MODEL = init_detector(args.det_config, args.det_checkpoint,
+                                  args.device)
+        POSE_MODEL = init_pose_model(args.pose_config, args.pose_checkpoint,
+                                     args.device)
+        SK_MODEL = init_recognizer(mmcv.Config.fromfile(args.skeleton_config),
+                                   args.skeleton_checkpoint, args.device)
 
-    global PREDS
-    CONSOLE.print('Performing skeleton inference...', style='green')
-    for clip in tqdm(PREDS):
-        skeleton_inference(clip, args)
-    CONSOLE.print(
-        f'Finished in {round((time.time() - start_time) / 60, 2)} min',
-        style='green')
+        global PREDS
+        CONSOLE.print('Performing skeleton inference...', style='green')
+        for clip in tqdm(PREDS):
+            skeleton_inference(clip, args)
+        CONSOLE.print(
+            f'Finished in {round((time.time() - start_time) / 60, 2)} min',
+            style='green')
+        torch.cuda.empty_cache()
 
-    torch.cuda.empty_cache()
-    AUDIO_MODEL = init_recognizer(mmcv.Config.fromfile(args.audio_config),
-                                  args.audio_checkpoint,
-                                  device=args.device)
-    global LOUD_WEIGHT
-    loud_weights = yaml.load(open(args.loudness_weights, 'r'),
-                             Loader=yaml.FullLoader)
-    LOUD_WEIGHT = sum(loud_weights.values()) / len(loud_weights)
+    if args.audio_checkpoint:
+        AUDIO_MODEL = init_recognizer(mmcv.Config.fromfile(args.audio_config),
+                                      args.audio_checkpoint,
+                                      device=args.device)
+        global LOUD_WEIGHT
+        loud_weights = yaml.load(open(args.loudness_weights, 'r'),
+                                 Loader=yaml.FullLoader)
+        LOUD_WEIGHT = sum(loud_weights.values()) / len(loud_weights)
 
-    CONSOLE.print('Performing audio inference...', style='green')
-    for clip in tqdm(PREDS):
-        audio_inference(clip)
-    torch.cuda.empty_cache()
+        CONSOLE.print('Performing audio inference...', style='green')
+        for clip in tqdm(PREDS):
+            audio_inference(clip)
+        torch.cuda.empty_cache()
 
     CONSOLE.print(
         f'Finished in {round((time.time() - start_time) / 60, 2)} min',
