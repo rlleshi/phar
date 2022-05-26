@@ -182,13 +182,13 @@ def parse_args():
         help='labels for rgb/pose/audio based action recognition models')
     parser.add_argument(
         '--rgb-config',
-        default=('mlruns/0/174fca4262984fff9f2997a132842b89/artifacts/'
-                 'i3d_r50_video_32x2x1_256e_kinetics400_rgb.py'),
+        default=('mlruns/7/d287e786e6a04ceba5c6a644a5be7ebf/artifacts/'
+                 'timesformer_divST_8x32x1_15e_kinetics400_rgb.py'),
         help='rgb-based action recognizer config file')
     parser.add_argument(
         '--rgb-checkpoint',
-        default=('./mlruns/0/174fca4262984fff9f2997a132842b89/artifacts/'
-                 'best_top1_acc_epoch_85.pth'),
+        default=('./mlruns/7/d287e786e6a04ceba5c6a644a5be7ebf/artifacts/'
+                 'best_top1_acc_epoch_13.pth'),
         help='rgb-based action recognizer model checkpoint')
     parser.add_argument(
         '--skeleton-config',
