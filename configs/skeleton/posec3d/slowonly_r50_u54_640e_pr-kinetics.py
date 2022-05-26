@@ -30,7 +30,7 @@ model = dict(type='Recognizer3D',
                            in_channels=512,
                            num_classes=num_classes,
                            spatial_type='avg',
-                           dropout_ratio=0.8,
+                           dropout_ratio=0.7,
                            topk=(1, 2, 3, 4, 5)),
              train_cfg=dict(),
              test_cfg=dict(average_clips='prob'))
@@ -38,7 +38,7 @@ model = dict(type='Recognizer3D',
 train_pipeline = [
     # * 54 (25% of 210) sampled frames seems better
     # 48 frames = 22.8%
-    dict(type='UniformSampleFrames', clip_len=64),
+    dict(type='UniformSampleFrames', clip_len=54),
     dict(type='PoseDecode'),
     dict(type='PoseCompact', hw_ratio=1., allow_imgpad=True),
     dict(type='Resize', scale=(-1, 64)),
@@ -55,7 +55,7 @@ train_pipeline = [
     dict(type='ToTensor', keys=['imgs', 'label'])
 ]
 val_pipeline = [
-    dict(type='UniformSampleFrames', clip_len=64, num_clips=1, test_mode=True),
+    dict(type='UniformSampleFrames', clip_len=54, num_clips=1, test_mode=True),
     dict(type='PoseDecode'),
     dict(type='PoseCompact', hw_ratio=1., allow_imgpad=True),
     dict(type='Resize', scale=(-1, 64)),
@@ -70,7 +70,7 @@ val_pipeline = [
     dict(type='ToTensor', keys=['imgs'])
 ]
 test_pipeline = [
-    dict(type='UniformSampleFrames', clip_len=64, num_clips=10,
+    dict(type='UniformSampleFrames', clip_len=54, num_clips=10,
          test_mode=True),
     dict(type='PoseDecode'),
     dict(type='PoseCompact', hw_ratio=1., allow_imgpad=True),
@@ -111,7 +111,7 @@ optimizer_config = dict(grad_clip=dict(max_norm=40, norm_type=2))
 
 # learning policy
 lr_config = dict(policy='CosineAnnealing', by_epoch=False, min_lr=0)
-total_epochs = 480
+total_epochs = 640
 checkpoint_config = dict(interval=40)
 workflow = [('train', 10)]
 evaluation = dict(interval=5,

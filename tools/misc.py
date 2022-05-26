@@ -4,6 +4,7 @@ import os.path as osp
 import subprocess
 import sys
 from pathlib import Path
+from typing import Callable
 
 import numpy as np
 from rich.console import Console
@@ -42,6 +43,7 @@ CONSOLE = Console()
 #
 # 4. Dataset Stuff
 #   4.1 gen_single_ann_file(): generates annotation file for a single class
+#   4.2 augment_video(): augments a single video
 #
 # 5. Obscure
 #   5.1 merge_train_test()
@@ -224,7 +226,7 @@ def read_pickel(path):
         print(annotations)
 
 
-# read_pickel('mmaction2/data/phar/pose/0.4_0.4/val/fondling/0EI0TELM.pkl')
+# read_pickel('mmaction2/data/phar/pose/val/69/017S966E.pkl')
 # -----------------------------------------------------------------------------
 
 
@@ -369,7 +371,7 @@ def extract_subclip(video, start, finish):
             CONSOLE.print(log, style='bold red')
 
 
-extract_subclip('demos/general-test/subclip_561.mp4', 0, 65)
+# extract_subclip('demos/general-test/533.mp4', 0, 100)
 # -----------------------------------------------------------------------------
 
 
@@ -438,7 +440,45 @@ def gen_single_ann_file(path, label, id, splits=['train', 'val'], audio=False):
         CONSOLE.print(f'Generated {out}', style='green')
 
 
-# gen_single_ann_file('mmaction2/data/phar/', 'scoop_up', 13, ['val'])
+gen_single_ann_file(path='mmaction2/data/phar/audio_feature/filtered_20/',
+                    label='kissing',
+                    id=4,
+                    audio=True)
+
+# -----------------------------------------------------------------------------
+
+
+def augment_video(path: str, augment: Callable):
+    import cv2
+
+    video = cv2.VideoCapture(path)
+    fps = video.get(cv2.CAP_PROP_FPS)
+    size = (round(video.get(cv2.CAP_PROP_FRAME_WIDTH)),
+            round(video.get(cv2.CAP_PROP_FRAME_HEIGHT)))
+    frames = []
+    while cv2.waitKey(1) < 0:
+        success, frame = video.read()
+        if not success:
+            video.release()
+            break
+        frames.append(frame)
+    aug_frames = augment(np.array(frames))
+
+    out_f = 'aug.mp4'
+    video_writer = cv2.VideoWriter(out_f, cv2.VideoWriter_fourcc(*'mp4v'), fps,
+                                   size)
+
+    for frame in aug_frames:
+        video_writer.write(np.array(frame))
+
+    CONSOLE.print(f'Stored result as {out_f}', style='green')
+
+
+# from vidaug import augmentors as va
+# augment_video(path='mmaction2/data/phar/val/69/017S966E.mp4',
+#               augment=va.PiecewiseAffineTransform(displacement=2,
+#                                 displacement_kernel=1,
+#                                 displacement_magnification=2))
 
 # -----------------------------------------------------------------------------
 
