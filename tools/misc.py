@@ -371,7 +371,7 @@ def extract_subclip(video, start, finish):
             CONSOLE.print(log, style='bold red')
 
 
-# extract_subclip('demos/general-test/533.mp4', 0, 100)
+extract_subclip('600.mp4', 400, None)
 # -----------------------------------------------------------------------------
 
 
@@ -440,10 +440,10 @@ def gen_single_ann_file(path, label, id, splits=['train', 'val'], audio=False):
         CONSOLE.print(f'Generated {out}', style='green')
 
 
-gen_single_ann_file(path='mmaction2/data/phar/audio_feature/filtered_20/',
-                    label='kissing',
-                    id=4,
-                    audio=True)
+# gen_single_ann_file(path='mmaction2/data/phar/audio_feature/filtered_20/',
+#                     label='kissing',
+#                     id=4,
+#                     audio=True)
 
 # -----------------------------------------------------------------------------
 

@@ -48,11 +48,11 @@ FONTCOLOR = (255, 255, 0)  # BGR, white
 FONTCOLOR_SCORE = (0, 165, 255)
 THICKNESS = 1
 LINETYPE = 1
-x, y = 10, 30
-x_y_dist = 200
 AUDIO_FEATURE_SCRIPT = 'mmaction2/tools/data/build_audio_features.py'
 LOUD_WEIGHT = None
 TEMP = 'temp'
+x, y = 10, 30
+x_y_dist = 200
 placeholder = {
     'kissing': 0,
     'fondling': 0,
@@ -60,7 +60,9 @@ placeholder = {
     'fingering': 0,
     'titjob': 0
 }
-
+num_keypoint = 17
+sk_thr = 3
+a_thr = 2
 CONSOLE = Console()
 manager = Manager()
 clips = manager.list()
@@ -297,9 +299,11 @@ def skeleton_inference(clip: str, args: dict):
         args (dict): parsed args
     """
     global PREDS
-    if set(list(PREDS[clip]['rgb'].keys())[:3]).isdisjoint(POSE_LABELS):
-        CONSOLE.print(f'Skipping {clip} for skeleton inference...',
-                      style='yellow')
+    if set(list(PREDS[clip]['rgb'].keys())[:sk_thr]).isdisjoint(POSE_LABELS):
+        CONSOLE.print(
+            f'Skipping {clip} for skeleton inference. Labels were'
+            f' not found in top {sk_thr} preds of the rgb model',
+            style='yellow')
         PREDS[clip]['pose'] = placeholder
         return
 
@@ -311,15 +315,14 @@ def skeleton_inference(clip: str, args: dict):
     pose_results = pose_inference(frame_paths, det_results)
     torch.cuda.empty_cache()
 
-    fake_anno = dict(frame_dir='',
-                     label=-1,
-                     img_shape=(h, w),
-                     original_shape=(h, w),
-                     start_index=0,
-                     modality='Pose',
-                     total_frames=num_frame)
+    data = dict(frame_dir='',
+                label=-1,
+                img_shape=(h, w),
+                original_shape=(h, w),
+                start_index=0,
+                modality='Pose',
+                total_frames=num_frame)
     num_person = max([len(x) for x in pose_results])
-    num_keypoint = 17
     keypoint = np.zeros((num_person, num_frame, num_keypoint, 2),
                         dtype=np.float16)
     keypoint_score = np.zeros((num_person, num_frame, num_keypoint),
@@ -329,15 +332,15 @@ def skeleton_inference(clip: str, args: dict):
             pose = pose['keypoints']
             keypoint[j, i] = pose[:, :2]
             keypoint_score[j, i] = pose[:, 2]
-    fake_anno['keypoint'] = keypoint
-    fake_anno['keypoint_score'] = keypoint_score
+    data['keypoint'] = keypoint
+    data['keypoint_score'] = keypoint_score
 
     tmp_frame_dir = osp.dirname(frame_paths[0])
     count_0 = 0
     for k in range(0, num_person):
         for i in range(0, num_frame):
             for j in range(0, 17):  # 17 defined keypoints
-                if fake_anno['keypoint_score'][k][i][j] < args.pose_score_thr:
+                if data['keypoint_score'][k][i][j] < args.pose_score_thr:
                     # fake_anno['keypoint'][k][i][j] = 0
                     count_0 += 1
     try:
@@ -345,14 +348,14 @@ def skeleton_inference(clip: str, args: dict):
     except ZeroDivisionError:
         correct_rate = 0
     if correct_rate < args.correct_rate:
-        CONSOLE.print((f'Clip has correct rate of {correct_rate} lower than '
+        CONSOLE.print((f'Clip has correct rate of {correct_rate}, lower than '
                        f'the threshold of {args.correct_rate}. Skipping...'),
                       style='red')
         shutil.rmtree(tmp_frame_dir)
         PREDS[clip]['pose'] = placeholder
         return
 
-    results = inference_recognizer(SK_MODEL, fake_anno)
+    results = inference_recognizer(SK_MODEL, data)
     PREDS[clip]['pose'] = {}
     results = [(POSE_LABELS[r[0]], r[1]) for r in results]
     for r in results:
@@ -363,7 +366,7 @@ def skeleton_inference(clip: str, args: dict):
 def audio_inference(clip: str):
     """Audio based action recognition."""
     global PREDS
-    if set(list(PREDS[clip]['rgb'].keys())[:2]).isdisjoint(AUDIO_LABELS):
+    if set(list(PREDS[clip]['rgb'].keys())[:a_thr]).isdisjoint(AUDIO_LABELS):
         CONSOLE.print(f'Skipping {clip} for audio inference...',
                       style='yellow')
         PREDS[clip]['audio'] = placeholder
@@ -377,8 +380,7 @@ def audio_inference(clip: str):
 
     data, rate = sf.read(out_audio)
     meter = pyln.Meter(rate)  # meter works with decibels
-    loudness = meter.integrated_loudness(data)
-    if loudness < LOUD_WEIGHT:
+    if meter.integrated_loudness(data) < LOUD_WEIGHT:
         CONSOLE.print(f'Audio for clip {clip} is not loud enough. Skipping...',
                       style='yellow')
         PREDS[clip]['audio'] = placeholder
@@ -486,7 +488,7 @@ def main():
     extract_clips(args.video, args.subclip_len, args.num_processes)
 
     global RGB_MODEL, SK_MODEL, AUDIO_MODEL, DET_MODEL, POSE_MODEL
-    RGB_MODEL = init_recognizer(mmcv.Config.fromfile(args.rgb_config),
+    RGB_MODEL = init_recognizer(args.rgb_config,
                                 args.rgb_checkpoint,
                                 device=args.device)
     CONSOLE.print('Performing RGB inference...', style='green')
@@ -496,15 +498,15 @@ def main():
         style='green')
     torch.cuda.empty_cache()
 
+    global PREDS
     if args.skeleton_checkpoint:
         DET_MODEL = init_detector(args.det_config, args.det_checkpoint,
                                   args.device)
         POSE_MODEL = init_pose_model(args.pose_config, args.pose_checkpoint,
                                      args.device)
-        SK_MODEL = init_recognizer(mmcv.Config.fromfile(args.skeleton_config),
+        SK_MODEL = init_recognizer(args.skeleton_config,
                                    args.skeleton_checkpoint, args.device)
 
-        global PREDS
         CONSOLE.print('Performing skeleton inference...', style='green')
         for clip in tqdm(PREDS):
             skeleton_inference(clip, args)
@@ -514,7 +516,7 @@ def main():
         torch.cuda.empty_cache()
 
     if args.audio_checkpoint:
-        AUDIO_MODEL = init_recognizer(mmcv.Config.fromfile(args.audio_config),
+        AUDIO_MODEL = init_recognizer(args.audio_config,
                                       args.audio_checkpoint,
                                       device=args.device)
         global LOUD_WEIGHT

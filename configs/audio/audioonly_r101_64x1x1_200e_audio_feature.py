@@ -91,12 +91,12 @@ optimizer = dict(type='SGD', lr=0.0025, momentum=0.9,
 optimizer_config = dict(grad_clip=dict(max_norm=40, norm_type=2))
 # learning policy
 lr_config = dict(policy='CosineAnnealing', min_lr=0)
-total_epochs = 200
+total_epochs = 320
 
 # * runtime settings
 checkpoint_config = dict(interval=20)
 log_config = dict(
-    interval=20,
+    interval=100,
     hooks=[
         dict(type='TextLoggerHook'),
         # dict(type='TensorboardLoggerHook'),
