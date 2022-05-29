@@ -23,7 +23,7 @@ model = dict(
         patch_size=16,
         embed_dims=768,
         in_channels=3,
-        dropout_ratio=0.2,
+        dropout_ratio=0.3,
         transformer_layers=None,
         # divided attention is the best strategy
         attention_type='divided_space_time',
@@ -121,7 +121,7 @@ optimizer_config = dict(grad_clip=dict(max_norm=40, norm_type=2))
 
 # learning policy
 lr_config = dict(policy='step', step=[5, 10])
-total_epochs = 20
+total_epochs = 30
 
 # * runtime settings
 checkpoint_config = dict(interval=1)
