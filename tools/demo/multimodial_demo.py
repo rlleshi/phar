@@ -1,4 +1,5 @@
 import argparse
+import json
 import os
 import os.path as osp
 import shutil
@@ -401,7 +402,33 @@ def audio_inference(clip: str):
     os.remove(out_feature)
 
 
-def write_results(args):
+def get_weighted_scores(clip: str, coeffs: list) -> dict:
+    """Get the weighted scores of all modules.
+
+    Args:
+        clip (str): current clip
+        coeffs (list): weight coefficients
+
+    Returns:
+        dict: weighted scores
+    """
+    scores = []
+    for module in PREDS[clip]:
+        score = [0 for _ in range(len(RGB_LABELS))]
+        for k in PREDS[clip][module]:
+            score[RGB_LABELS.index(k)] = PREDS[clip][module][k]
+        scores.append(score)
+    weighted_scores = get_weighted_score(scores, coeffs)
+
+    result = {}
+    for i in range(len(weighted_scores)):
+        if 0 == weighted_scores[i]:
+            continue
+        result[weighted_scores[i]] = RGB_LABELS[i]
+    return dict(sorted(result.items(), reverse=True))
+
+
+def write_results_video(args):
     """Write the results to the video.
 
     Args:
@@ -428,30 +455,14 @@ def write_results(args):
                 break
             frames.append(frame)
 
-        scores = []
-        for m in PREDS[c]:
-            score = [0 for _ in range(len(RGB_LABELS))]
-            for k in PREDS[c][m]:
-                score[RGB_LABELS.index(k)] = PREDS[c][m][k]
-            scores.append(score)
-
-        weighted_scores = get_weighted_score(scores, args.coefficients)
-
-        result = {}
-        for i in range(len(weighted_scores)):
-            if 0 == weighted_scores[i]:
-                continue
-            result[weighted_scores[i]] = RGB_LABELS[i]
-
-        result = dict(sorted(result.items(), reverse=True))
+        result = get_weighted_scores(c, args.coefficients)
 
         for frame in frames:
             i = 1
             for topk in result:
                 if i == args.topk:
                     break
-                # score = topk / 3
-                # * best would be to divide the score based on #models
+                # ? divide the score based on #models used
                 score = np.interp(topk, [0, 2.0], [0, 1])
                 cv2.putText(frame, result[topk], (x, y * i), FONTFACE,
                             FONTSCALE, FONTCOLOR, THICKNESS, LINETYPE)
@@ -462,6 +473,17 @@ def write_results(args):
             video_writer.write(frame.astype(np.uint8))
     video_writer.release()
     cleanup(args.original_video, tmp_out_video, args.out)
+
+
+def write_results_json(args: dict):
+    results = []
+    for c in PREDS:
+        results.append(get_weighted_scores(c, args.coefficients))
+    with open(args.out, 'w') as js:
+        json.dump(results, js)
+
+    shutil.rmtree(TEMP, ignore_errors=True)
+    shutil.rmtree('./tmp', ignore_errors=True)
 
 
 # TODO: performance improvement
@@ -476,7 +498,7 @@ def main():
     Path(TEMP).mkdir(parents=True, exist_ok=True)
     start_time = time.time()
 
-    # resize video
+    # resize video to make inferences faster
     CONSOLE.print('Resizing video...', style='green')
     video = mpy.VideoFileClip(args.video)
     video_resized = video.resize(height=480)
@@ -535,7 +557,10 @@ def main():
     PREDS = dict(sorted((PREDS.items())))
     CONSOLE.print(PREDS)
 
-    write_results(args)
+    if args.out.endswith('.json'):
+        write_results_json(args)
+    else:
+        write_results_video(args)
     CONSOLE.print(
         f'Finished in {round((time.time() - start_time) / 60, 2)} min',
         style='green')
