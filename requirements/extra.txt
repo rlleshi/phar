@@ -1,0 +1,4 @@
+mlflow==1.17.0
+rich==10.9.0
+schedule==1.1.0
+tqdm==4.60.0
