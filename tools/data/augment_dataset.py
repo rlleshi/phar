@@ -103,6 +103,7 @@ def augment_video(items):
 def main():
     args = parse_args()
     Path(args.out_dir).mkdir(parents=True, exist_ok=True)
+    assert 0 < args.rate < 1.0
 
     for label in tqdm(utils.annotations_list(args.ann)):
         out_dir_label = osp.join(args.out_dir, label)
