@@ -68,6 +68,7 @@ CONSOLE = Console()
 manager = Manager()
 clips = manager.list()
 PREDS = {}
+USED_MODS = {}  # used models were used per clip prediction
 
 
 def _extract_clip(items):
@@ -153,11 +154,12 @@ def pose_inference(frame_paths, det_results):
 def cleanup(original_video, tmp_out_video, out_video):
     """Add original audio to demo & cleanup."""
     # extract & add audio to demo
-    cmd_extract = f'ffmpeg -i {original_video} -f mp3 -ab 192000 -vn audio.mp3'
+    cmd_extract = (f'ffmpeg -i {original_video} -f mp3 -ab 192000 -vn '
+                   'audio.mp3 -y')
     os.popen(cmd_extract)
     time.sleep(5)
     cmd_add = (f'ffmpeg -i {tmp_out_video} -i audio.mp3 -c copy -map 0:v:0 '
-               f'-map 1:a:0 {out_video}')
+               f'-map 1:a:0 {out_video} -y')
     os.popen(cmd_add)
     time.sleep(5)
 
@@ -190,6 +192,7 @@ def parse_args():
         help='rgb-based action recognizer config file')
     parser.add_argument(
         '--rgb-checkpoint',
+        # TODO: replace with git coordinates?
         default=('./mlruns/7/d287e786e6a04ceba5c6a644a5be7ebf/artifacts/'
                  'best_top1_acc_epoch_13.pth'),
         help='rgb-based action recognizer model checkpoint')
@@ -258,7 +261,7 @@ def parse_args():
                         nargs='+',
                         type=float,
                         help='coefficients of each model (rgb, skelet, audio)',
-                        default=[1.1, 1.0, 1.3])
+                        default=[0.4, 0.8, 1.0])
     parser.add_argument('--pose-score-thr',
                         type=float,
                         default=0.4,
@@ -283,9 +286,10 @@ def parse_args():
 
 def rgb_inference():
     """Perform RGB-model inference."""
-    global PREDS
+    global PREDS, USED_MODS
     for clip in tqdm(clips):
         PREDS[clip] = {'rgb': {}}
+        USED_MODS[clip] = [0]
         results = inference_recognizer(RGB_MODEL, clip)
         results = [(RGB_LABELS[r[0]], r[1]) for r in results]
         for r in results:
@@ -299,7 +303,7 @@ def skeleton_inference(clip: str, args: dict):
         clip (str): video
         args (dict): parsed args
     """
-    global PREDS
+    global PREDS, USED_MODS
     if set(list(PREDS[clip]['rgb'].keys())[:sk_thr]).isdisjoint(POSE_LABELS):
         CONSOLE.print(
             f'Skipping {clip} for skeleton inference. Labels were'
@@ -362,11 +366,12 @@ def skeleton_inference(clip: str, args: dict):
     for r in results:
         PREDS[clip]['pose'][r[0]] = r[1]
     shutil.rmtree(tmp_frame_dir)
+    USED_MODS[clip].append(1)
 
 
 def audio_inference(clip: str):
     """Audio based action recognition."""
-    global PREDS
+    global PREDS, USED_MODS
     if set(list(PREDS[clip]['rgb'].keys())[:a_thr]).isdisjoint(AUDIO_LABELS):
         CONSOLE.print(f'Skipping {clip} for audio inference...',
                       style='yellow')
@@ -400,6 +405,7 @@ def audio_inference(clip: str):
 
     os.remove(out_audio)
     os.remove(out_feature)
+    USED_MODS[clip].append(2)
 
 
 def get_weighted_scores(clip: str, coeffs: list) -> dict:
@@ -462,8 +468,12 @@ def write_results_video(args):
             for topk in result:
                 if i == args.topk:
                     break
-                # ? divide the score based on #models used
-                score = np.interp(topk, [0, 2.0], [0, 1])
+                # scale the score depending on coeffs and #models used
+                n_mods = len(USED_MODS[c])
+                score_scaler = n_mods / sum(
+                    [args.coefficients[m] for m in USED_MODS[c]])
+                score = round(topk / n_mods, 2) * score_scaler
+
                 cv2.putText(frame, result[topk], (x, y * i), FONTFACE,
                             FONTSCALE, FONTCOLOR, THICKNESS, LINETYPE)
                 cv2.putText(frame, str(round(100 * score, 2)),
@@ -476,6 +486,7 @@ def write_results_video(args):
 
 
 def write_results_json(args: dict):
+    # TODO: timestamp generation
     results = []
     for c in PREDS:
         results.append(get_weighted_scores(c, args.coefficients))
@@ -486,8 +497,8 @@ def write_results_json(args: dict):
     shutil.rmtree('./tmp', ignore_errors=True)
 
 
-# TODO: performance improvement
-# Multi GPU processing for rgb, skeleton (ggf. detection & pose estimation),
+# TODO: performance improvements
+# multi GPU processing for rgb, skeleton (ggf. detection & pose estimation),
 # and finally for audio
 def main():
     args = parse_args()
@@ -513,6 +524,9 @@ def main():
     RGB_MODEL = init_recognizer(args.rgb_config,
                                 args.rgb_checkpoint,
                                 device=args.device)
+    CONSOLE.print(
+        f'Finished in {round((time.time() - start_time) / 60, 2)} min',
+        style='green')
     CONSOLE.print('Performing RGB inference...', style='green')
     rgb_inference()
     CONSOLE.print(
@@ -554,13 +568,14 @@ def main():
     CONSOLE.print(
         f'Finished in {round((time.time() - start_time) / 60, 2)} min',
         style='green')
-    PREDS = dict(sorted((PREDS.items())))
+    PREDS = dict(sorted(PREDS.items()))
     CONSOLE.print(PREDS)
 
     if args.out.endswith('.json'):
         write_results_json(args)
     else:
         write_results_video(args)
+
     CONSOLE.print(
         f'Finished in {round((time.time() - start_time) / 60, 2)} min',
         style='green')
