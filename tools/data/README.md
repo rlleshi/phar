@@ -11,6 +11,7 @@ Make Porn Great Again
 2. Create the clip dataset using `tools/data/generate_dataset.py`
 3. Downgrade the quality of the videos using `tools/data/resize_videos.py`. Training will be much faster as resize overhead is removed.
 4. Ggf. use `RepeatDataset` to further speed up training.
+5. Use `mmaction2/tools/analysis/check_videos.py` to check if the dataset is valid.
 
 ### Build Pose Dataset
 
