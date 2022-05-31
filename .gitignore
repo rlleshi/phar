@@ -139,6 +139,8 @@ mmaction2/work_dir/
 mlruns/
 demos/
 annotator/via-3.0.11/
-checkpoints/
+checkpoints/detector/
+checkpoints/har/
+checkpoints/pose/
 temp/
 tmp/
