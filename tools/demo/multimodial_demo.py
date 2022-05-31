@@ -40,9 +40,6 @@ except (ImportError, ModuleNotFoundError):
 
 sys.path.append('./mmaction2')
 
-# TODOs:
-# * for now build the script for one GPU only
-
 FONTFACE = cv2.FONT_HERSHEY_DUPLEX
 FONTSCALE = 0.85
 FONTCOLOR = (255, 255, 0)  # BGR, white
@@ -69,6 +66,11 @@ manager = Manager()
 clips = manager.list()
 PREDS = {}
 USED_MODS = {}  # used models were used per clip prediction
+
+
+def _delete():
+    shutil.rmtree(TEMP, ignore_errors=True)
+    shutil.rmtree('./tmp', ignore_errors=True)
 
 
 def _extract_clip(items):
@@ -164,8 +166,6 @@ def cleanup(original_video, tmp_out_video, out_video):
     time.sleep(5)
 
     # cleanup
-    shutil.rmtree(TEMP, ignore_errors=True)
-    shutil.rmtree('./tmp', ignore_errors=True)
     os.remove('audio.mp3')
     os.remove(tmp_out_video)
 
@@ -280,6 +280,9 @@ def parse_args():
         help=('audio loudness thresholds for each class. Not all videos have '
               'loud enough audio suitable for audio-based HAR'))
     parser.add_argument('--topk', type=int, default=5, help='top k accuracy')
+    parser.add_argument('--timestamps',
+                        action='store_true',
+                        help='generate timestamps')
     args = parser.parse_args()
     return args
 
@@ -409,7 +412,7 @@ def audio_inference(clip: str):
 
 
 def get_weighted_scores(clip: str, coeffs: list) -> dict:
-    """Get the weighted scores of all modules.
+    """Get the weighted scores of all modules sorted in descending order.
 
     Args:
         clip (str): current clip
@@ -434,8 +437,8 @@ def get_weighted_scores(clip: str, coeffs: list) -> dict:
     return dict(sorted(result.items(), reverse=True))
 
 
-def write_results_video(args):
-    """Write the results to the video.
+def write_results_video(args: dict):
+    """Write the results to a video demo.
 
     Args:
         args (dict): parsed args
@@ -486,20 +489,39 @@ def write_results_video(args):
 
 
 def write_results_json(args: dict):
-    # TODO: timestamp generation
+    """Write results to json.
+
+    Args:
+        args (dict): _description_
+    """
     results = []
     for c in PREDS:
         results.append(get_weighted_scores(c, args.coefficients))
     with open(args.out, 'w') as js:
         json.dump(results, js)
 
-    shutil.rmtree(TEMP, ignore_errors=True)
-    shutil.rmtree('./tmp', ignore_errors=True)
+
+def write_timestamps(args: dict):
+    """Write video timestamps.
+
+    Args:
+        args (dict): _description_
+    """
+    results = {}
+    i = 0
+    for c in PREDS:
+        topks = get_weighted_scores(c, args.coefficients)
+        start = i * args.subclip_len
+        end = start + args.subclip_len
+        results[f'{start}:{end}'] = list(topks.items())[0][1]
+        i += 1
+    with open(f'{osp.splitext(args.out)[0]}_ts.json', 'w') as js:
+        json.dump(results, js)
 
 
-# TODO: performance improvements
-# multi GPU processing for rgb, skeleton (ggf. detection & pose estimation),
-# and finally for audio
+# TODO: performance improvements: multi GPU processing for rgb, skeleton
+# (ggf. detection & pose estimation), and finally for audio
+# TODO: refactoring is needed
 def main():
     args = parse_args()
     global RGB_LABELS, POSE_LABELS, AUDIO_LABELS
@@ -575,6 +597,9 @@ def main():
         write_results_json(args)
     else:
         write_results_video(args)
+    if args.timestamps:
+        write_timestamps(args)
+    _delete()
 
     CONSOLE.print(
         f'Finished in {round((time.time() - start_time) / 60, 2)} min',
