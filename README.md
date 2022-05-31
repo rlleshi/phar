@@ -23,7 +23,7 @@ Once we have detailed information about the kind of actions/positions that are h
 
 ## Supported Features
 
-First download the HAR models here. Then move them to their corresponding locations inside the `checkpoints/har` folder.
+First download the HAR models here. Then move them inside the `checkpoints/har` folder.
 
 ### Video Demo
 
@@ -31,7 +31,7 @@ Input a video and get a demo with the top predictions every X seconds.
 
 `python tools/demo/multimodial_demo.py video.mp4 demo.mp4`
 
-Alternatively, the results can also be dumped in a json file by providing the output file as such.
+Alternatively, the results can also be dumped in a json file by specifying the output file as such.
 
 Check out the [detailed usage](#multimodial-demo).
 
@@ -52,6 +52,10 @@ Checkout the [detailed usage](#late-fusion).
 ### Content Filtering
 
 TODO
+
+### Deployment
+
+depends if ppl find it useful
 
 ## Installation
 
@@ -113,6 +117,8 @@ Accuracy | Training Speed | Complexity
 --- | --- | ---
 top1_acc 0.8130 <br> top2_acc 0.9191 <br> top3_acc 0.9748 | Avg iter time: 0.8616 s/iter| Flops: 17.83 GFLOPs <br> Params: 2.0 M
 
+Check the [confusion matrix](resources/plots/skeleton_cm.png) for a detailed view of the performance.
+
 #### Loss
 
 ![alt text](resources/plots/posec3d_loss.jpg)
@@ -130,6 +136,8 @@ A simple ResNet 101, with some small tweaks, was used. This model definitely nee
 Accuracy | Training Speed
 --- | ---
 top1_acc 0.6867 <br> top2_acc 0.9038 <br> top3_acc 0.9663 | Avg iter time: 0.2747 s/iter
+
+Check the [confusion matrix](resources/plots/audio_cm.png) for a detailed view of the performance.
 
 #### Loss
 
