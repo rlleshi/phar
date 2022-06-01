@@ -59,17 +59,17 @@ depends if ppl find it useful
 
 ## Installation
 
-This project is based on [MMAction2](https://github.com/open-mmlab/mmaction2). You can see the detailed installation steps [here](https://mmaction2.readthedocs.io/en/latest/install.html).
+This project is based on [MMAction2](https://github.com/open-mmlab/mmaction2).
 
 The following installation instructions are for ubuntu (hence should also work for Windows WSL). Check the links for details if you are interested in other operating systems.
 
-1. Install Mim: `pip install git+https://github.com/open-mmlab/mim.git`
-2. Install MMAction2: `mim install mmaction2 -f https://github.com/open-mmlab/mmaction2.git`
-3. Install MMPose, [link](https://mmpose.readthedocs.io/en/latest/install.html)
-4. Install MMDetection, [link](https://mmdetection.readthedocs.io/en/latest/get_started.html#installation)
-5. Extra dependencies: `pip install -r requirements/extra.txt`
-
-Of course, it is recommended that you have CUDA & CUDNN installed.
+0. Clone this repo and its submodules: `git clone --recurse-submodules git@github.com:rlleshi/phar.git` & create environment with python 3.8+
+1. Install torch (of course, it is recommended that you have CUDA & CUDNN installed)
+2. Install Mim: `pip install git+https://github.com/open-mmlab/mim.git`
+3. Install MMAction2: `mim install mmaction2 -f https://github.com/open-mmlab/mmaction2.git`. If installing with mim fails, then checkout the detailed installation steps [here](https://mmaction2.readthedocs.io/en/latest/install.html).
+4. Install MMPose, [link](https://mmpose.readthedocs.io/en/latest/install.html)
+5. Install MMDetection, [link](https://mmdetection.readthedocs.io/en/latest/get_started.html#installation)
+6. Install extra dependencies: `pip install -r requirements/extra.txt`
 
 ## Models
 

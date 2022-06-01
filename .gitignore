@@ -140,7 +140,9 @@ mlruns/
 demos/
 annotator/via-3.0.11/
 checkpoints/detector/
-checkpoints/har/
+checkpoints/har/audio.pth
+checkpoints/har/posec3d.pth
+checkpoints/har/timesformer.pth
 checkpoints/pose/
 temp/
 tmp/
