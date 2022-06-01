@@ -11,7 +11,6 @@ from multiprocessing import Manager, Pool, cpu_count
 from pathlib import Path
 
 import cv2
-import mmcv
 import moviepy.editor as mpy
 import numpy as np
 import pyloudnorm as pyln
@@ -128,28 +127,22 @@ def detection_inference(det_score_thr, frame_paths):
     assert DET_MODEL.CLASSES[0] == 'person', ('Please use a detector trained '
                                               'on COCO')
     results = []
-    CONSOLE.print('Performing Human Detection for each frame')
-    prog_bar = mmcv.ProgressBar(len(frame_paths))
     for frame_path in frame_paths:
         result = inference_detector(DET_MODEL, frame_path)
-        # We only keep human detections with score larger than det_score_thr
+        # keep human detections with score larger than det_score_thr
         result = result[0][result[0][:, 4] >= det_score_thr]
         results.append(result)
-        prog_bar.update()
     return results
 
 
 def pose_inference(frame_paths, det_results):
     ret = []
-    print('Performing Human Pose Estimation for each frame')
-    prog_bar = mmcv.ProgressBar(len(frame_paths))
     for f, d in zip(frame_paths, det_results):
-        # Align input format
+        # align input format
         d = [dict(bbox=x) for x in list(d)]
         pose = inference_top_down_pose_model(POSE_MODEL, f, d,
                                              format='xyxy')[0]
         ret.append(pose)
-        prog_bar.update()
     return ret
 
 
@@ -187,35 +180,25 @@ def parse_args():
         help='labels for rgb/pose/audio based action recognition models')
     parser.add_argument(
         '--rgb-config',
-        default=('mlruns/7/d287e786e6a04ceba5c6a644a5be7ebf/artifacts/'
-                 'timesformer_divST_8x32x1_15e_kinetics400_rgb.py'),
+        default='checkpoints/har/timesformer_divST_8x24x1_kinetics400_rgb.py',
         help='rgb-based action recognizer config file')
-    parser.add_argument(
-        '--rgb-checkpoint',
-        # TODO: replace with git coordinates?
-        default=('./mlruns/7/d287e786e6a04ceba5c6a644a5be7ebf/artifacts/'
-                 'best_top1_acc_epoch_13.pth'),
-        help='rgb-based action recognizer model checkpoint')
+    parser.add_argument('--rgb-checkpoint',
+                        default='checkpoints/har/timesformer.pth',
+                        help='rgb-based action recognizer model checkpoint')
     parser.add_argument(
         '--skeleton-config',
-        default=('mlruns/3/3d6c9a9a7bc043479ef3cc168d3eb2ad/artifacts/'
-                 'slowonly_r50_u54_480e_pr-kinetics.py'),
+        default='checkpoints/har/slowonly_r50_u54_480e_pr-kinetics.py',
         help='skeleton-based action recognizer config file')
-    parser.add_argument(
-        '--skeleton-checkpoint',
-        default=('mlruns/3/3d6c9a9a7bc043479ef3cc168d3eb2ad/artifacts/'
-                 'best_top1_acc_epoch_395.pth'),
-        help='pose-based action recognizer model checkpoint')
+    parser.add_argument('--skeleton-checkpoint',
+                        default='checkpoints/har/posec3d.pth',
+                        help='pose-based action recognizer model checkpoint')
     parser.add_argument(
         '--audio-config',
-        default=('mlruns/4/bb25d9cab8cf46f48716c3b3b29f5fd9/artifacts/'
-                 'audioonly_r50_64x1x1_100e_audio_feature.py'),
+        default='checkpoints/har/audioonly_r101_64x1x1_audio_feature.py',
         help='audio-based action recognizer config file')
-    parser.add_argument(
-        '--audio-checkpoint',
-        default=('mlruns/4/bb25d9cab8cf46f48716c3b3b29f5fd9/artifacts/'
-                 'best_top1_acc_epoch_55.pth'),
-        help='audio-based action recognizer model checkpoint')
+    parser.add_argument('--audio-checkpoint',
+                        default='checkpoints/har/audio.pth',
+                        help='audio-based action recognizer model checkpoint')
     parser.add_argument(
         '--pose-config',
         default='mmaction2/demo/hrnet_w32_coco_256x192.py',
@@ -381,10 +364,9 @@ def audio_inference(clip: str):
         PREDS[clip]['audio'] = placeholder
         return
 
-    CONSOLE.print(f'Extracting audio for {clip}...', style='green')
     out_audio = f'{osp.splitext(clip)[0]}.wav'
-    cmd = f'ffmpeg -i ./{clip}  -map 0:a  -y {out_audio}'
-    os.popen(cmd)
+    subprocess.run(['ffmpeg', '-i', clip, '-map', '0:a', '-y', out_audio],
+                   capture_output=True)
     time.sleep(1)
 
     data, rate = sf.read(out_audio)
@@ -395,10 +377,10 @@ def audio_inference(clip: str):
         PREDS[clip]['audio'] = placeholder
         return
 
-    CONSOLE.print(f'Building audio features for {clip}...', style='green')
     out_feature = f'{osp.splitext(out_audio)[0]}.npy'
-    subargs = ['python', AUDIO_FEATURE_SCRIPT, TEMP, TEMP, '--ext', '.wav']
-    subprocess.run(subargs)
+    subprocess.run(
+        ['python', AUDIO_FEATURE_SCRIPT, TEMP, TEMP, '--ext', '.wav'],
+        capture_output=True)
 
     results = inference_recognizer(AUDIO_MODEL, out_feature)
     results = [(AUDIO_LABELS[k[0]], k[1]) for k in results]
@@ -557,6 +539,20 @@ def main():
     torch.cuda.empty_cache()
 
     global PREDS
+    if args.audio_checkpoint:
+        AUDIO_MODEL = init_recognizer(args.audio_config,
+                                      args.audio_checkpoint,
+                                      device=args.device)
+        global LOUD_WEIGHT
+        loud_weights = yaml.load(open(args.loudness_weights, 'r'),
+                                 Loader=yaml.FullLoader)
+        LOUD_WEIGHT = sum(loud_weights.values()) / len(loud_weights)
+
+        CONSOLE.print('Performing audio inference...', style='green')
+        for clip in tqdm(PREDS):
+            audio_inference(clip)
+        torch.cuda.empty_cache()
+
     if args.skeleton_checkpoint:
         DET_MODEL = init_detector(args.det_config, args.det_checkpoint,
                                   args.device)
@@ -571,20 +567,6 @@ def main():
         CONSOLE.print(
             f'Finished in {round((time.time() - start_time) / 60, 2)} min',
             style='green')
-        torch.cuda.empty_cache()
-
-    if args.audio_checkpoint:
-        AUDIO_MODEL = init_recognizer(args.audio_config,
-                                      args.audio_checkpoint,
-                                      device=args.device)
-        global LOUD_WEIGHT
-        loud_weights = yaml.load(open(args.loudness_weights, 'r'),
-                                 Loader=yaml.FullLoader)
-        LOUD_WEIGHT = sum(loud_weights.values()) / len(loud_weights)
-
-        CONSOLE.print('Performing audio inference...', style='green')
-        for clip in tqdm(PREDS):
-            audio_inference(clip)
         torch.cuda.empty_cache()
 
     CONSOLE.print(
