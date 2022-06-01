@@ -1,4 +1,8 @@
-mlflow==1.17.0
-rich==10.9.0
-schedule==1.1.0
-tqdm==4.60.0
+librosa==0.8.1
+lws==1.2.7
+mlflow
+moviepy==1.0.3
+pyloudnorm==0.1.0
+rich
+schedule
+SoundFile==0.10.3.post1
