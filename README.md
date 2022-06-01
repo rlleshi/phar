@@ -23,7 +23,7 @@ Once we have detailed information about the kind of actions/positions that are h
 
 ## Supported Features
 
-First download the HAR models here. Then move them inside the `checkpoints/har` folder.
+First download the HAR models [here](https://github.com/rlleshi/phar/releases/tag/v1.0.0). Then move them inside the `checkpoints/har` folder.
 
 ### Video Demo
 
