@@ -87,7 +87,9 @@ Best performing models (performance & runtime wise) are `timesformer` for the RG
 
 Another approach would be to train a model with two of the input streams at a time (i.e. rgb+skeleton & rgb+audio) and then perhaps combine their results. But this wouldn't work due to the nature of the data. When it comes to the audio input streams, it can only be exploited for certain actions (e.g. `deepthroat` due to the gag reflex or `anal` due to a higher pitch), while for others it's not possible to derive any insight from their audio (e.g. missionary, doggy and cowgirl do not have any special characteristics to set them apart from an audio perspective).
 
-Likewise, the skeleton-based model can only be used in those instances where the pose estimation is accurate above a certain confidence threshold (for these experiments the threshold used was 0.4). For example, for actions such as `scoop-up` or `the-snake` it's hard to get an accurate pose estimation in most camera angles due to the proximity of the human bodies in the frame (the poses get fuzzy and mixed up). This then influences the accuracy of the HAR model negatively. However, for actions such as doggy, cowgirl or missionary, the pose estimation is generally good enough to train a HAR model. If we have a bigger dataset, then we will probably have enough instances of clean samples for the difficult actions such as to train all (17) of them with a skeleton-based model. Skeleton based models are according to the current SOTA literature superior to the rgb-based ones. Ideally of course, the pose estimation models should also be fine tuned in the sex domain in order to get a better overall pose estimation.
+Likewise, the skeleton-based model can only be used in those instances where the pose estimation is accurate above a certain confidence threshold (for these experiments the threshold used was 0.4). For example, for actions such as `scoop-up` or `the-snake` it's hard to get an accurate pose estimation in most camera angles due to the proximity of the human bodies in the frame (the poses get fuzzy and mixed up). This then influences the accuracy of the HAR model negatively. However, for actions such as doggy, cowgirl or missionary, the pose estimation is generally good enough to train a HAR model.
+
+If we have a bigger dataset, however, then we will probably have enough instances of clean samples for the difficult actions such as to train all (17) of them with a skeleton-based model. Skeleton based models are according to the current SOTA literature superior to the rgb-based ones. Ideally of course, the pose estimation models should also be fine tuned in the sex domain in order to get a better overall pose estimation.
 
 #### Metrics
 
@@ -157,7 +159,7 @@ Check the [confusion matrix](resources/plots/audio_cm.png) for a detailed overvi
 
 First things first, [here](https://www.womenshealthmag.com/sex-and-love/a19943165/sex-positions-guide/) is a list of definitions of the sex positions used in this project in case there is any confusion. `fondling`, in addition to the meaning of the word, was also thought of as a general placeholder, e.g. when it is unclear what action there is. In reality, however, it's ability to be a general placeholder is limited because I only got 48 minutes of data for this action.
 
-In general, a train/val split of 0.8/0.2 was used for all the datasets. The length of the clips in training & validation sets currently is 7 seconds (main motivation was to include the more ephemeral actions such as `cumshot` or `kissing`). In total ~594 videos were annotated with a total of 2674 minutes. Check out the [annotation distribution](resources/annotation_distribution(min).json) in time (minutes) for each of the 17 classes for more information. The dataset was not perfectly annotated but the number of wrong annotations should be small and hence the drop in performance should be minimal.
+In general, a train/val split of 0.8/0.2 was used for all the datasets. The length of the clips in training & validation sets currently is 7 seconds (the main motivation was to include the more ephemeral actions such as `cumshot` or `kissing`). In total ~594 videos were annotated with a total of **2674** minutes. Check out the [annotation distribution](resources/annotation_distribution(min).json) in time (minutes) for each of the 17 classes for more information. The dataset was not perfectly annotated but the number of wrong annotations should be small and hence the drop in performance should be minimal.
 
 In general, it can be said that this is a small dataset. Normally ~44 hours of footage would be enough for 17 actions. However, each position has a tremendous variety when it comes to camera perspectives, which makes the recognition task hard if there aren't enough samples. This would also mean that we should ideally have the same amount of footage for each different perspective. However, labeling the dataset was already very time-consuming and I didn't keep track of this point.
 
@@ -165,7 +167,7 @@ A HAR model trained on 3D poses might be able solve this camera-perspective prob
 
 The dataset is also slightly imbalanced, which actually makes the rgb models slightly biased towards the positions (actions) that have more data.
 
-If you'd like to help with doubling the current size of the dataset, please do contact me.
+If you'd like to help with doubling the current size of the dataset, please do open an issue.
 
 ### RGB
 
