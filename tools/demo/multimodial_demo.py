@@ -31,7 +31,7 @@ except (ImportError, ModuleNotFoundError):
                       'required in this demo! ')
 
 try:
-    from mmpose.apis import (inference_top_down_pose_model, init_pose_model)
+    from mmpose.apis import inference_top_down_pose_model, init_pose_model
 except (ImportError, ModuleNotFoundError):
     raise ImportError('Failed to import `inference_top_down_pose_model`, '
                       '`init_pose_model`, and `vis_pose_result` form '
@@ -64,7 +64,8 @@ CONSOLE = Console()
 manager = Manager()
 clips = manager.list()
 PREDS = {}
-USED_MODS = {}  # used models were used per clip prediction
+# used models per each clip prediction. This varies from clip to clip
+USED_MODS = {}
 
 
 def _delete():
@@ -86,7 +87,7 @@ def _extract_clip(items):
         clip = video.subclip(start, finish)
         clip.write_videofile(clip_pth, logger=None, audio=True)
     except OSError as e:
-        CONSOLE.print(e, style='bold red')
+        verbose_print(e, style='bold red')
         pass
 
 
@@ -100,7 +101,7 @@ def extract_clips(video: str, s_len: int, num_proc: int):
     """
     video_dur = mpy.VideoFileClip(video).duration
     splits, remainder = int(video_dur / s_len), int(video_dur % s_len)
-    CONSOLE.print(f'Extracting {splits} sublicps for {video}...',
+    verbose_print(f'Extracting {splits} sublicps for {video}...',
                   style='green')
     time_segments = [{
         f'ts{i:02}': [s_len * i, s_len * i + s_len]
@@ -151,8 +152,8 @@ def cleanup(original_video, tmp_out_video, out_video):
     # extract & add audio to demo
     cmd_extract = (f'ffmpeg -i {original_video} -f mp3 -ab 192000 -vn '
                    'audio.mp3 -y')
-    os.popen(cmd_extract)
-    time.sleep(5)
+    os.popen(cmd_extract)  # ? change os.popen
+    time.sleep(5)  # ! Sleep time should be proportional to video len
     cmd_add = (f'ffmpeg -i {tmp_out_video} -i audio.mp3 -c copy -map 0:v:0 '
                f'-map 1:a:0 {out_video} -y')
     os.popen(cmd_add)
@@ -266,6 +267,9 @@ def parse_args():
     parser.add_argument('--timestamps',
                         action='store_true',
                         help='generate timestamps')
+    parser.add_argument('--verbose',
+                        action='store_true',
+                        help='verbose output')
     args = parser.parse_args()
     return args
 
@@ -291,9 +295,9 @@ def skeleton_inference(clip: str, args: dict):
     """
     global PREDS, USED_MODS
     if set(list(PREDS[clip]['rgb'].keys())[:sk_thr]).isdisjoint(POSE_LABELS):
-        CONSOLE.print(
-            f'Skipping {clip} for skeleton inference. Labels were'
-            f' not found in top {sk_thr} preds of the rgb model',
+        verbose_print(
+            f'Skipped {clip} for skeleton inference. Skeleton labels were'
+            f' not found in top {sk_thr} preds of the rgb model.',
             style='yellow')
         PREDS[clip]['pose'] = placeholder
         return
@@ -339,9 +343,9 @@ def skeleton_inference(clip: str, args: dict):
     except ZeroDivisionError:
         correct_rate = 0
     if correct_rate < args.correct_rate:
-        CONSOLE.print((f'Clip has correct rate of {correct_rate}, lower than '
-                       f'the threshold of {args.correct_rate}. Skipping...'),
-                      style='red')
+        verbose_print((f'Clip has correct rate of {correct_rate}, lower than '
+                       f'the threshold of {args.correct_rate}. Skipped.'),
+                      style='yellow')
         shutil.rmtree(tmp_frame_dir)
         PREDS[clip]['pose'] = placeholder
         return
@@ -355,11 +359,12 @@ def skeleton_inference(clip: str, args: dict):
     USED_MODS[clip].append(1)
 
 
-def audio_inference(clip: str):
+def audio_inference(clip: str, coeffs: list):
     """Audio based action recognition."""
     global PREDS, USED_MODS
     if set(list(PREDS[clip]['rgb'].keys())[:a_thr]).isdisjoint(AUDIO_LABELS):
-        CONSOLE.print(f'Skipping {clip} for audio inference...',
+        verbose_print(f'Skipped {clip} for audio inference. Audio labels were',
+                      f' not found in top {sk_thr} preds of the rgb model.',
                       style='yellow')
         PREDS[clip]['audio'] = placeholder
         return
@@ -372,7 +377,7 @@ def audio_inference(clip: str):
     data, rate = sf.read(out_audio)
     meter = pyln.Meter(rate)  # meter works with decibels
     if meter.integrated_loudness(data) < LOUD_WEIGHT:
-        CONSOLE.print(f'Audio for clip {clip} is not loud enough. Skipping...',
+        verbose_print(f'Audio for clip {clip} is not loud enough. Skipped.',
                       style='yellow')
         PREDS[clip]['audio'] = placeholder
         return
@@ -390,7 +395,10 @@ def audio_inference(clip: str):
 
     os.remove(out_audio)
     os.remove(out_feature)
-    USED_MODS[clip].append(2)
+    if 3 == len(coeffs):
+        USED_MODS[clip].append(2)
+    elif 2 == len(coeffs):
+        USED_MODS[clip].append(1)
 
 
 def get_weighted_scores(clip: str, coeffs: list) -> dict:
@@ -433,7 +441,8 @@ def write_results_video(args: dict):
         (round(video.get(cv2.CAP_PROP_FRAME_WIDTH)),
          round(video.get(cv2.CAP_PROP_FRAME_HEIGHT))))
 
-    CONSOLE.print('Writing results to video...', style='bold green')
+    CONSOLE.print(f'Writing results to video {args.out}...',
+                  style='bold green')
 
     for c in PREDS:
         # extract frames from clip
@@ -481,6 +490,7 @@ def write_results_json(args: dict):
         results.append(get_weighted_scores(c, args.coefficients))
     with open(args.out, 'w') as js:
         json.dump(results, js)
+    CONSOLE.print(f'Wrote results to {args.out}', style='green')
 
 
 def write_timestamps(args: dict):
@@ -497,43 +507,44 @@ def write_timestamps(args: dict):
         end = start + args.subclip_len
         results[f'{start}:{end}'] = list(topks.items())[0][1]
         i += 1
-    with open(f'{osp.splitext(args.out)[0]}_ts.json', 'w') as js:
+    out = f'{osp.splitext(args.out)[0]}_ts.json'
+    with open(out, 'w') as js:
         json.dump(results, js)
+    CONSOLE.print(f'Wrote timestamps to {out}', style='green')
 
 
 # TODO: performance improvements: multi GPU processing for rgb, skeleton
 # (ggf. detection & pose estimation), and finally for audio
-# TODO: refactoring is needed
+# TODO: general refactoring is needed
 def main():
     args = parse_args()
-    global RGB_LABELS, POSE_LABELS, AUDIO_LABELS
+    global RGB_LABELS, POSE_LABELS, AUDIO_LABELS, verbose_print
     RGB_LABELS, POSE_LABELS, AUDIO_LABELS = [
         [x.strip() for x in open(path).readlines()] for path in args.label_maps
     ]
     Path(TEMP).mkdir(parents=True, exist_ok=True)
+    verbose_print = CONSOLE.print if args.verbose else lambda *a, **k: None
     start_time = time.time()
 
-    # resize video to make inferences faster
-    CONSOLE.print('Resizing video...', style='green')
+    CONSOLE.print('Resizing video for faster inference...', style='green')
     video = mpy.VideoFileClip(args.video)
     video_resized = video.resize(height=480)
     out_video = osp.join(TEMP, osp.basename(args.video))
     video_resized.write_videofile(out_video)
     args.original_video = args.video
     args.video = out_video
-
     extract_clips(args.video, args.subclip_len, args.num_processes)
+    verbose_print(
+        f'Finished in {round((time.time() - start_time) / 60, 2)} min',
+        style='green')
 
     global RGB_MODEL, SK_MODEL, AUDIO_MODEL, DET_MODEL, POSE_MODEL
     RGB_MODEL = init_recognizer(args.rgb_config,
                                 args.rgb_checkpoint,
                                 device=args.device)
-    CONSOLE.print(
-        f'Finished in {round((time.time() - start_time) / 60, 2)} min',
-        style='green')
-    CONSOLE.print('Performing RGB inference...', style='green')
+    CONSOLE.print('Performing RGB inference...', style='bold green')
     rgb_inference()
-    CONSOLE.print(
+    verbose_print(
         f'Finished in {round((time.time() - start_time) / 60, 2)} min',
         style='green')
     torch.cuda.empty_cache()
@@ -548,9 +559,12 @@ def main():
                                  Loader=yaml.FullLoader)
         LOUD_WEIGHT = sum(loud_weights.values()) / len(loud_weights)
 
-        CONSOLE.print('Performing audio inference...', style='green')
+        CONSOLE.print('Performing audio inference...', style='bold green')
         for clip in tqdm(PREDS):
-            audio_inference(clip)
+            audio_inference(clip, args.coefficients)
+        verbose_print(
+            f'Finished in {round((time.time() - start_time) / 60, 2)} min',
+            style='green')
         torch.cuda.empty_cache()
 
     if args.skeleton_checkpoint:
@@ -561,19 +575,16 @@ def main():
         SK_MODEL = init_recognizer(args.skeleton_config,
                                    args.skeleton_checkpoint, args.device)
 
-        CONSOLE.print('Performing skeleton inference...', style='green')
+        CONSOLE.print('Performing skeleton inference...', style='bold green')
         for clip in tqdm(PREDS):
             skeleton_inference(clip, args)
-        CONSOLE.print(
+        verbose_print(
             f'Finished in {round((time.time() - start_time) / 60, 2)} min',
             style='green')
         torch.cuda.empty_cache()
 
-    CONSOLE.print(
-        f'Finished in {round((time.time() - start_time) / 60, 2)} min',
-        style='green')
     PREDS = dict(sorted(PREDS.items()))
-    CONSOLE.print(PREDS)
+    verbose_print(PREDS)
 
     if args.out.endswith('.json'):
         write_results_json(args)
@@ -583,7 +594,7 @@ def main():
         write_timestamps(args)
     _delete()
 
-    CONSOLE.print(
+    verbose_print(
         f'Finished in {round((time.time() - start_time) / 60, 2)} min',
         style='green')
 
