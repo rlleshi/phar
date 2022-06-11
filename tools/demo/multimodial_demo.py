@@ -245,7 +245,7 @@ def parse_args():
                         nargs='+',
                         type=float,
                         help='coefficients of each model (rgb, skelet, audio)',
-                        default=[0.4, 0.8, 1.0])
+                        default=[0.5, 0.6, 1.0])
     parser.add_argument('--pose-score-thr',
                         type=float,
                         default=0.4,

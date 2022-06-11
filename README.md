@@ -83,7 +83,7 @@ The SOTA results are archieved by late-fusing three models based on three input 
 
 ### Multi-Modial (Rgb + Skeleton + Audio)
 
-Best performing models (performance & runtime wise) are `timesformer` for the RGB stream, `poseC3D` for the skeleton stream, and `resnet101` for the Audio stream. The results of these models are fused together through late fusion. The models do not have the same importance in the late fusion scoring scheme. Currently the fine-tuned weights are: `0.4; 0.8; 1.0` for the RGB, skeleton & audio model respectively.
+The best performing models (performance & runtime wise) are `timesformer` for the RGB stream, `poseC3D` for the skeleton stream, and `resnet101` for the Audio stream. The results of these models are fused together through late fusion. The models do not have the same importance in the late fusion scoring scheme. Currently the fine-tuned weights are: `0.5; 0.6; 1.0` for the RGB, skeleton & audio model respectively.
 
 Another approach would be to train a model with two of the input streams at a time (i.e. rgb+skeleton & rgb+audio) and then perhaps combine their results. But this wouldn't work due to the nature of the data. When it comes to the audio input streams, it can only be exploited for certain actions (e.g. `deepthroat` due to the gag reflex or `anal` due to a higher pitch), while for others it's not possible to derive any insight from their audio (e.g. missionary, doggy and cowgirl do not have any special characteristics to set them apart from an audio perspective).
 
@@ -105,7 +105,7 @@ The best results for a 3D RGB model are achieved by the attention-based TimeSfor
 
 Accuracy | Training Speed | Complexity
 --- | --- | ---
-top1_acc 0.5583 <br> top2_acc 0.6818 <br> top3_acc 0.7374 <br> top4_acc 0.7840 <br> top5_acc 0.8186 | Avg iter time: 0.3472 s/iter | Flops: 100.96 GFLOPs <br> Params: 121.27 M
+top1_acc 0.5669 <br> top2_acc 0.6834 <br> top3_acc 0.7632 <br> top4_acc 0.8096 <br> top5_acc 0.8411 | Avg iter time: 0.3472 s/iter | Flops: 100.96 GFLOPs <br> Params: 121.27 M
 
 #### Loss
 

@@ -18,12 +18,12 @@ model = dict(
         type='TimeSformer',
         pretrained=  # noqa: E251
         'https://download.openmmlab.com/mmaction/recognition/timesformer/vit_base_patch16_224.pth',  # noqa: E501
-        num_frames=8,
+        num_frames=16,
         img_size=224,
         patch_size=16,
         embed_dims=768,
         in_channels=3,
-        dropout_ratio=0.3,
+        dropout_ratio=0.2,
         transformer_layers=None,
         # divided attention is the best strategy
         attention_type='divided_space_time',
@@ -39,7 +39,7 @@ model = dict(
 train_pipeline = [
     dict(type='DecordInit'),
     # * frame_interval has been selected for 7s clips
-    dict(type='SampleFrames', clip_len=8, frame_interval=24, num_clips=1),
+    dict(type='SampleFrames', clip_len=16, frame_interval=12, num_clips=1),
     dict(type='DecordDecode'),
     dict(type='RandomRescale', scale_range=(256, 320)),
     dict(type='RandomCrop', size=224),
@@ -52,8 +52,8 @@ train_pipeline = [
 val_pipeline = [
     dict(type='DecordInit'),
     dict(type='SampleFrames',
-         clip_len=8,
-         frame_interval=24,
+         clip_len=16,
+         frame_interval=12,
          num_clips=1,
          test_mode=True),
     dict(type='DecordDecode'),
@@ -67,8 +67,8 @@ val_pipeline = [
 test_pipeline = [
     dict(type='DecordInit'),
     dict(type='SampleFrames',
-         clip_len=8,
-         frame_interval=24,
+         clip_len=16,
+         frame_interval=12,
          num_clips=1,
          test_mode=True),
     dict(type='DecordDecode'),
@@ -121,7 +121,7 @@ optimizer_config = dict(grad_clip=dict(max_norm=40, norm_type=2))
 
 # learning policy
 lr_config = dict(policy='step', step=[5, 10])
-total_epochs = 30
+total_epochs = 25
 
 # * runtime settings
 checkpoint_config = dict(interval=1)
