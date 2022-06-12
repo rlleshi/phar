@@ -12,17 +12,6 @@ The models work on spatio-temporal data, meaning that they processes video clips
 
 Currently, 17 actions are supported. You can find the complete list [here](resources/annotations/annotations.txt). More data would be needed to further improve the models (help is welcomed). Read on for more information!
 
-## Motivation & Usages
-
-The idea behind this project is to try and apply the latest deep learning techniques (i.e. [human action recognition](https://scholar.google.com/scholar?hl=en&as_sdt=0%2C5&q=human+action+recognition&btnG=)) in the pornographic domain.
-
-Once we have detailed information about the kind of actions/positions that are happening in a video a number of uses-cases can apply:
-
-1. Improving the recommender system
-2. Automatic tag generator
-3. Automatic timestamp generator (when does an action start and finish)
-4. Cutting content out (for example non-sexual content)
-
 ## Supported Features
 
 First download the HAR models [here](https://github.com/rlleshi/phar/releases/tag/v1.0.0). Then move them inside the `checkpoints/har` folder.
@@ -57,11 +46,22 @@ Checkout the [detailed usage](#late-fusion).
 
 ### Content Filtering
 
-TODO: based on if people need it
+TODO: depending if people need it.
 
 ### Deployment
 
-Depends if people find this project useful. Currently one has to install the relevant libraries to use these models. See the section below.
+Depends if people find this project useful. Currently one has to install the relevant libraries to use these models. See the installation section below.
+
+## Motivation & Usages
+
+The idea behind this project is to try and apply the latest deep learning techniques (i.e. [human action recognition](https://scholar.google.com/scholar?hl=en&as_sdt=0%2C5&q=human+action+recognition&btnG=)) in the pornographic domain.
+
+Once we have detailed information about the kind of actions/positions that are happening in a video a number of uses-cases can apply:
+
+1. Improving the recommender system
+2. Automatic tag generator
+3. Automatic timestamp generator (when does an action start and finish)
+4. Cutting content out (for example non-sexual content)
 
 ## Installation
 
