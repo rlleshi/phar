@@ -12,7 +12,7 @@ from mmcv import load
 from mmpose.apis import vis_pose_result
 from mmpose.models import TopDown
 
-sys.path.append('tools/')  # noqa
+sys.path.append('src/')  # noqa
 import utils as utils  # noqa isort:skip
 
 keypoint_pipeline = [

@@ -73,22 +73,19 @@ def parse_args():
                             'salient object detection')
     parser.add_argument('src_dir', help='src dir')
     parser.add_argument('out_dir', help='out dir')
-    parser.add_argument(
-        '--model',
-        type=str,
-        default='../models/salient-object-det/u2net.pth',
-        help='path to background extraction model')
-    parser.add_argument(
-        '--level',
-        type=int,
-        default=3,
-        choices=[1, 2, 3],
-        help='directory level of data')
-    parser.add_argument(
-        '--device',
-        type=str,
-        default='cuda:0',
-        help='device to use, `None` for no gpus')
+    parser.add_argument('--model',
+                        type=str,
+                        default='../models/salient-object-det/u2net.pth',
+                        help='path to background extraction model')
+    parser.add_argument('--level',
+                        type=int,
+                        default=3,
+                        choices=[1, 2, 3],
+                        help='directory level of data')
+    parser.add_argument('--device',
+                        type=str,
+                        default='cuda:0',
+                        help='device to use, `None` for no gpus')
     args = parser.parse_args()
     return args
 
@@ -118,8 +115,8 @@ def bitwise_sub(orig_frames, salient_res, out_dir):
         orig = cv2.imread(orig_frames[i])
         u2net = cv2.imread(salient_res[i])
         result = cv2.subtract(u2net, orig)
-        cv2.imwrite(
-            osp.join(out_dir, orig_frames[i].split(os.sep)[-1]), result)
+        cv2.imwrite(osp.join(out_dir, orig_frames[i].split(os.sep)[-1]),
+                    result)
 
 
 def extract_obj(orig_frames, sub_frames, out_dir):
@@ -180,18 +177,19 @@ def background_removal(video, model, out_dir):
         # use crop to focus the person
         transform=transforms.Compose([RescaleT(320),
                                       ToTensorLab(flag=0)]))
-    sal_obj_dataloader = DataLoader(
-        sal_obj_dataset, batch_size=1, shuffle=False, num_workers=1)
+    sal_obj_dataloader = DataLoader(sal_obj_dataset,
+                                    batch_size=1,
+                                    shuffle=False,
+                                    num_workers=1)
 
     # salient object detection using u2net
     inference(model, frames, sal_obj_dataloader, salient_dir)
     if len(os.listdir(salient_dir)) == 0:
-        CONSOLE.print(
-            f'Error with salient object detection for {video}',
-            style='bold red')
+        CONSOLE.print(f'Error with salient object detection for {video}',
+                      style='bold red')
         return
 
-    # bitwise substraction between u2net result and orig image
+    # bitwise subtraction between u2net result and orig image
     # improves final performance
     bitwise_sub(frames, glob.glob(osp.join(salient_dir, '*')), sub_dir)
 

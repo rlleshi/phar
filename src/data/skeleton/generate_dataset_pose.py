@@ -23,8 +23,8 @@ RESULT_PATH = 'results'
 def generate_structure(path):
     Path(path).mkdir(parents=True, exist_ok=True)
     for split in ['train', 'val', 'test']:
-        Path(osp.join(path, CLIPS_PATH, split)).mkdir(
-            parents=True, exist_ok=True)
+        Path(osp.join(path, CLIPS_PATH, split)).mkdir(parents=True,
+                                                      exist_ok=True)
     Path(osp.join(path, RESULT_PATH)).mkdir(parents=True, exist_ok=True)
 
 
@@ -32,27 +32,24 @@ def parse_args():
     parser = ArgumentParser(prog='generate pose data for skeleton-based-har '
                             'based on a VideoDataset directory.')
     parser.add_argument('src_dir', type=str, help='VideoDataset directory')
-    parser.add_argument(
-        'split_set',
-        nargs='+',
-        choices=['train', 'val', 'test'],
-        help='type of sets to generate the pose dataset for')
-    parser.add_argument(
-        '--out-dir',
-        type=str,
-        default='data/skeleton/bast_base/',
-        help='resulting dataset dir')
+    parser.add_argument('split_set',
+                        nargs='+',
+                        choices=['train', 'val', 'test'],
+                        help='type of sets to generate the pose dataset for')
+    parser.add_argument('--out-dir',
+                        type=str,
+                        default='data/skeleton/bast_base/',
+                        help='resulting dataset dir')
     parser.add_argument(
         '--ann',
         type=str,
         default=('human-action-recognition/har/annotations/BAST/base/'
                  'tanz_annotations.txt'),
         help='annotations')
-    parser.add_argument(
-        '--devices',
-        nargs='+',
-        choices=['cuda:0', 'cuda:1', 'cuda:2', 'cuda:3'],
-        help='gpu to use; can parallelize for each split-set')
+    parser.add_argument('--devices',
+                        nargs='+',
+                        choices=['cuda:0', 'cuda:1', 'cuda:2', 'cuda:3'],
+                        help='gpu to use; can parallelize for each split-set')
     args = parser.parse_args()
     return args
 

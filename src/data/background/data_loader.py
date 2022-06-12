@@ -1,4 +1,5 @@
 from __future__ import division, print_function
+
 # import glob
 # import math
 import random
@@ -15,7 +16,6 @@ from torch.utils.data import Dataset  # DataLoader
 
 # ==========================dataset load==========================
 class RescaleT(object):
-
     def __init__(self, output_size):
         assert isinstance(output_size, (int, tuple))
         self.output_size = output_size
@@ -41,19 +41,17 @@ class RescaleT(object):
         # lbl = transform.resize(label,(new_h,new_w),mode='constant',
         # order=0, preserve_range=True)
 
-        img = transform.resize(
-            image, (self.output_size, self.output_size), mode='constant')
-        lbl = transform.resize(
-            label, (self.output_size, self.output_size),
-            mode='constant',
-            order=0,
-            preserve_range=True)
+        img = transform.resize(image, (self.output_size, self.output_size),
+                               mode='constant')
+        lbl = transform.resize(label, (self.output_size, self.output_size),
+                               mode='constant',
+                               order=0,
+                               preserve_range=True)
 
         return {'imidx': imidx, 'image': img, 'label': lbl}
 
 
 class Rescale(object):
-
     def __init__(self, output_size):
         assert isinstance(output_size, (int, tuple))
         self.output_size = output_size
@@ -80,17 +78,15 @@ class Rescale(object):
         # #resize the image to new_h x new_w and convert image from
         # range [0,255] to [0,1]
         img = transform.resize(image, (new_h, new_w), mode='constant')
-        lbl = transform.resize(
-            label, (new_h, new_w),
-            mode='constant',
-            order=0,
-            preserve_range=True)
+        lbl = transform.resize(label, (new_h, new_w),
+                               mode='constant',
+                               order=0,
+                               preserve_range=True)
 
         return {'imidx': imidx, 'image': img, 'label': lbl}
 
 
 class RandomCrop(object):
-
     def __init__(self, output_size):
         assert isinstance(output_size, (int, tuple))
         if isinstance(output_size, int):
@@ -120,7 +116,6 @@ class RandomCrop(object):
 
 class ToTensor(object):
     """Convert ndarrays in sample to Tensors."""
-
     def __call__(self, sample):
 
         imidx, image, label = sample['imidx'], sample['image'], sample['label']
@@ -160,7 +155,6 @@ class ToTensor(object):
 
 class ToTensorLab(object):
     """Convert ndarrays in sample to Tensors."""
-
     def __init__(self, flag=0):
         self.flag = flag
 
@@ -284,7 +278,6 @@ class ToTensorLab(object):
 
 
 class SalObjDataset(Dataset):
-
     def __init__(self, img_name_list, lbl_name_list, transform=None):
         # self.root_dir = root_dir
         # self.image_name_list = glob.glob(image_dir+'*.png')

@@ -11,7 +11,7 @@ import seaborn as sns
 from rich.console import Console
 from tqdm import tqdm
 
-sys.path.append('./tools')  # noqa: E501
+sys.path.append('./src')  # noqa: E501
 import data.skeleton.pose_extraction as pose_extraction  # noqa isort:skip
 
 try:
@@ -22,7 +22,7 @@ except ImportError:
         'Please install MMDet and MMPose for pose extraction.')  # noqa: E501
 
 CONSOLE = Console()
-POSE_EXTR_PATH = 'tools/data/skeleton/pose_extraction.py'
+POSE_EXTR_PATH = 'src/data/skeleton/pose_extraction.py'
 PROGRESS_FILE = 'pose_feasibility_progress.txt'
 
 

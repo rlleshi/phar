@@ -22,7 +22,7 @@ except ImportError:
     warnings.warn(
         'Please install MMDet and MMPose for pose extraction.')  # noqa: E501
 
-sys.path.append('tools/')  # noqa
+sys.path.append('src/')  # noqa
 import utils as utils  # noqa isort:skip
 
 MMDET_ROOT = 'mmdetection'

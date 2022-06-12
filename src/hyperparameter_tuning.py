@@ -125,15 +125,18 @@ def parse_args():
                       'i3d_r50_video_32x2x1_bast_baseline.py')
     parser = ArgumentParser(prog='model tuning')
     parser.add_argument('experiment', type=str, help='experiment name')
-    parser.add_argument(
-        '--name', type=str, default='baseline', help='current run name')
-    parser.add_argument(
-        '--work-dir',
-        type=str,
-        default='/mnt/data_transfer_tuning/write/work_dir',
-        help='mlflow dir')
-    parser.add_argument(
-        '--config', type=str, default=default_config, help='model config file')
+    parser.add_argument('--name',
+                        type=str,
+                        default='baseline',
+                        help='current run name')
+    parser.add_argument('--work-dir',
+                        type=str,
+                        default='/mnt/data_transfer_tuning/write/work_dir',
+                        help='mlflow dir')
+    parser.add_argument('--config',
+                        type=str,
+                        default=default_config,
+                        help='model config file')
     parser.add_argument(
         '--cfg-options',
         nargs='+',
@@ -146,41 +149,37 @@ def parse_args():
         '--resume-from',
         action='store_true',
         help='if there is a ready model, start only the evaluation process')
-    parser.add_argument(
-        '--resume-from-training',
-        type=str,
-        help='the checkpoint file to resume the training from')
-    parser.add_argument(
-        '--execute-only',
-        type=str,
-        nargs='+',
-        help='only the given functions will be executed')
-    parser.add_argument(
-        '--src-dir',
-        type=str,
-        default='/mnt/data_transfer/read/to_process/',
-        help='raw videos directory')
-    parser.add_argument(
-        '--test-split',
-        type=train_test_parser,
-        default='0.18',
-        help='dataset train/test ratio. Give for testing')
-    parser.add_argument(
-        '--clip-length', type=int, default=10, help='clip length for dataset')
-    parser.add_argument(
-        '--sliding-window',
-        type=int,
-        default=5,
-        help='datasets clips sliding window')
+    parser.add_argument('--resume-from-training',
+                        type=str,
+                        help='the checkpoint file to resume the training from')
+    parser.add_argument('--execute-only',
+                        type=str,
+                        nargs='+',
+                        help='only the given functions will be executed')
+    parser.add_argument('--src-dir',
+                        type=str,
+                        default='/mnt/data_transfer/read/to_process/',
+                        help='raw videos directory')
+    parser.add_argument('--test-split',
+                        type=train_test_parser,
+                        default='0.18',
+                        help='dataset train/test ratio. Give for testing')
+    parser.add_argument('--clip-length',
+                        type=int,
+                        default=10,
+                        help='clip length for dataset')
+    parser.add_argument('--sliding-window',
+                        type=int,
+                        default=5,
+                        help='datasets clips sliding window')
     parser.add_argument(
         '--ann-type',
         default='base',
         choices=['base', 'eval'],
         help='type of annotations for which to generate the dataset')
-    parser.add_argument(
-        '--no-demo',
-        action='store_true',
-        help='whether to perform long video demos')
+    parser.add_argument('--no-demo',
+                        action='store_true',
+                        help='whether to perform long video demos')
     args = parser.parse_args()
     return args
 

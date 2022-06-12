@@ -38,8 +38,6 @@ CONSOLE = Console()
 #   3.3 download_youtube(): downloads youtube video
 #   3.4 extract_timestamps(): annotation timestamp extraction based on VIA
 #   3.5 merge_images_with_font(): merge images and add fonts to them
-#   3.6 long_video_demo(): based on MMAction2
-#   3.7 demo_posec3d(): based on MMaction2
 #
 # 4. Dataset Stuff
 #   4.1 gen_single_ann_file(): generates annotation file for a single class
@@ -308,7 +306,7 @@ def rewritte_video(video):
         video_writer.write(frame.astype(np.uint8))
 
 
-# rewritte_video('demo/kinesphere/1s-window/2s-train_48-frames_Kinesphäre_alle_impro_CS.mp4')
+# rewritte_video('It do go duown-DYzT-Pk6Ogw.mkv')
 # -----------------------------------------------------------------------------
 
 
@@ -371,7 +369,7 @@ def extract_subclip(video, start, finish):
             CONSOLE.print(log, style='bold red')
 
 
-extract_subclip('600.mp4', 400, None)
+# extract_subclip('dataset_2/602.mp4', 1301, None)
 # -----------------------------------------------------------------------------
 
 
@@ -565,8 +563,7 @@ def merge_images_with_font(*args,
     from PIL import Image, ImageOps, ImageFont, ImageDraw
     import math
 
-    fnt = ImageFont.truetype(
-        'thesis/scripts-local/fonts/07558_CenturyGothic.ttf', size=font_size)
+    fnt = ImageFont.truetype('fonts/07558_CenturyGothic.ttf', size=font_size)
 
     images = []
     for arg in args:
@@ -601,126 +598,12 @@ def merge_images_with_font(*args,
 
 
 # merge_images_with_font(
-#     'thesis/tanet 1.jpg',
-#     'thesis/tanet 2.jpg',
-#     'thesis/tanet 3.jpg',
-#     'thesis/tsn 1.jpg',
-#     'thesis/tsn 2.jpg',
-#     'thesis/tsn 3.jpg',
+#     'tanet 1.jpg',
+#     'tanet 2.jpg',
+#     'tanet 3.jpg',
+#     'tsn 1.jpg',
+#     'tsn 2.jpg',
+#     'tsn 3.jpg',
 #     cols=3,
 #     label_rgb=(0, 255, 255), font_size=20, label_pos=(170, 0))
-# -----------------------------------------------------------------------------
-
-
-def merge_train_test(path):
-    """Merge train & test set FROM BAST dataset.
-
-    Args:
-        path (_type_): _description_
-    """
-    import os
-    import shutil
-    import os.path as osp
-
-    # copy clips
-    val_path = osp.join(path, 'videos_val')
-    train_path = osp.join(path, 'videos_train')
-    for cls in os.listdir(val_path):
-        cls_val = osp.join(val_path, cls)
-        cls_train = osp.join(train_path, cls)
-
-        for clip in os.listdir(cls_val):
-            shutil.move(osp.join(cls_val, clip), cls_train)
-
-    # copy clips list
-    with open(osp.join(path, 'tanz_val_list_videos.txt'), 'r') as file:
-        val_ann = [line for line in file]
-    assert len(val_ann) > 0
-
-    with open(osp.join(path, 'tanz_train_list_videos.txt'), 'a') as file:
-        for line in val_ann:
-            line.replace('videos_val', 'videos_train')
-            file.write(line)
-
-    # restructure
-    shutil.rmtree(val_path)
-    shutil.rmtree(osp.join(path, 'annotations'))
-    os.unlink(osp.join(path, 'tanz_val_list_videos.txt'))
-    os.rename(train_path, osp.join(path, 'clips_eval'))
-    os.rename(osp.join(path, 'tanz_train_list_videos.txt'),
-              osp.join(path, 'tanz_test_list_videos.txt'))
-
-    print('Merged videos_val with videos_train')
-
-
-# merge_train_test('minio-transfer/read/tanz')
-# -----------------------------------------------------------------------------
-
-
-def long_video_demo():
-    import subprocess
-    import os
-    import random
-    from tqdm import tqdm
-    out_path = '/mnt/data_transfer/write/avatar_vids/'
-    in_path = '/mnt/data_transfer/read/to_process_test/avatar_vid/'
-    existing = os.listdir(out_path)
-
-    target = os.listdir(in_path)
-    random.shuffle(target)
-    for vid in tqdm(target):
-        out = vid.split('.')[0] + '.json'
-        if out in existing:
-            continue
-        print(f'Processing {vid}...')
-        subargs = [
-            'python',
-            'human-action-recognition/har/tools/long_video_demo_clips.py',
-            os.path.join(in_path, vid),
-            ('configs/skeleton/posec3d/'
-             'slowonly_r50_u48_240e_ntu120-pr_keypoint_bast.py'),
-            ('/mnt/data_transfer_tuning/write/work_dir/8/'
-             '56f6783167af4c75835f2021a30bd136/artifacts/'
-             'best_top1_acc_epoch_425.pth'),
-            os.path.join(out_path,
-                         out), '--num-processes', '25', '--num-gpus', '3'
-        ]
-        subprocess.run(subargs)
-
-
-# -----------------------------------------------------------------------------
-
-
-def demo_posec3d(path):
-    import subprocess
-    import os
-    from tqdm import tqdm
-
-    script_path = 'demo/demo_posec3d.py'
-    config = ('configs/skeleton/posec3d/'
-              'slowonly_r50_u48_240e_ntu120-pr_keypoint_bast.py')
-    checkpoint = ('/mnt/data_transfer_tuning/write/work_dir/10/'
-                  '4f6aa64c148544198e26bbaf50da2100/artifacts/'
-                  'best_top1_acc_epoch_225.pth')
-    ann = ('human-action-recognition/har/annotations/BAST/eval/'
-           'tanz_annotations_42.txt')
-
-    for clip in tqdm(os.listdir(path)):
-        subargs = [
-            'python',
-            script_path,
-            os.path.join(path, clip),
-            os.path.join(path, clip),  # overwrite original clip
-            '--config',
-            config,
-            '--checkpoint',
-            checkpoint,
-            '--label-map',
-            ann,  # class annotations
-            '--device',
-            'cuda:0'
-        ]
-        subprocess.run(subargs)
-
-
 # -----------------------------------------------------------------------------

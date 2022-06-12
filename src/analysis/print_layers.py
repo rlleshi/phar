@@ -7,8 +7,10 @@ def parse_args():
     parser = argparse.ArgumentParser(prog='model layer printer')
     parser.add_argument('config', help='config file path')
     parser.add_argument('checkpoint', help='checkpoint file')
-    parser.add_argument(
-        '--device', type=str, default='cuda:0', help='CPU/CUDA device option')
+    parser.add_argument('--device',
+                        type=str,
+                        default='cuda:0',
+                        help='CPU/CUDA device option')
     args = parser.parse_args()
     return args
 

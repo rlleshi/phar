@@ -7,10 +7,9 @@ from argparse import ArgumentParser
 import pandas as pd
 import seaborn as sns
 import torch
+from mmaction.apis import inference_recognizer, init_recognizer
 from rich.console import Console
 from tqdm import tqdm
-
-from mmaction.apis import inference_recognizer, init_recognizer
 
 # https://stackoverflow.com/questions/4383571/importing-files-from-different-folder
 sys.path.append('human-action-recognition/')  # noqa
@@ -24,13 +23,14 @@ def parse_args():
     parser = ArgumentParser(prog='accuracy per class for a bunch of clips')
     parser.add_argument('checkpoint', help='model')
     parser.add_argument('split', type=str, help='train/validation/test')
-    parser.add_argument(
-        '--src-dir',
-        type=str,
-        default='/mmaction2/data/tanz/videos_val/',
-        help='source dir of videos to be evaluated as clips')
-    parser.add_argument(
-        '--out', type=str, default='/mnt/data_transfer/write/', help='out dir')
+    parser.add_argument('--src-dir',
+                        type=str,
+                        default='/mmaction2/data/tanz/videos_val/',
+                        help='source dir of videos to be evaluated as clips')
+    parser.add_argument('--out',
+                        type=str,
+                        default='/mnt/data_transfer/write/',
+                        help='out dir')
     parser.add_argument('--config', type=str, help='model config file')
     parser.add_argument(
         '--ann',
@@ -39,18 +39,16 @@ def parse_args():
                  'tanz_annotations.txt'),
         help='classes/labels')
     parser.add_argument('--device', type=str, default='cuda:0', help='cpu/gpu')
-    parser.add_argument(
-        '--type',
-        default='rgb',
-        choices=['rgb', 'skeleton'],
-        help='rgb or skeleton')
-    parser.add_argument(
-        '--topk',
-        type=int,
-        nargs='+',
-        default=[1, 2, 3],
-        choices=[1, 2, 3, 4, 5],
-        help='top-k accuracy to evaluate')
+    parser.add_argument('--type',
+                        default='rgb',
+                        choices=['rgb', 'skeleton'],
+                        help='rgb or skeleton')
+    parser.add_argument('--topk',
+                        type=int,
+                        nargs='+',
+                        default=[1, 2, 3],
+                        choices=[1, 2, 3, 4, 5],
+                        help='top-k accuracy to evaluate')
     args = parser.parse_args()
     return args
 

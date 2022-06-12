@@ -36,16 +36,14 @@ def parse_args():
     parser = ArgumentParser(prog='generate file list for rawframes dataset')
     parser.add_argument('ann', type=str, help='annotation file')
     parser.add_argument('src_dir', type=str, help='root dir for rawframes')
-    parser.add_argument(
-        '--val-split',
-        type=train_test_parser,
-        default='0.18',
-        required=False,
-        help='train/validation ratio. Give for validation')
-    parser.add_argument(
-        '--test-set',
-        action='store_true',
-        help='flag to generate the testing set')
+    parser.add_argument('--val-split',
+                        type=train_test_parser,
+                        default='0.18',
+                        required=False,
+                        help='train/validation ratio. Give for validation')
+    parser.add_argument('--test-set',
+                        action='store_true',
+                        help='flag to generate the testing set')
     args = parser.parse_args()
     return args
 

@@ -73,7 +73,7 @@ def parse_args():
 
 def pose(items):
     gpu, clips, args = items
-    script_path = 'tools/demo/demo_skeleton.py'
+    script_path = 'src/demo/demo_skeleton.py'
     if not osp.exists(script_path):
         CONSOLE.print(f'{script_path} does not exist', style='red')
     for clip in clips:
