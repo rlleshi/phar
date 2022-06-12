@@ -139,6 +139,7 @@ mmaction2/work_dir/
 mlruns/
 demos/
 annotator/via-3.0.11/
+annotator/via_video_annotator.html
 checkpoints/detector/
 checkpoints/har/audio.pth
 checkpoints/har/posec3d.pth
