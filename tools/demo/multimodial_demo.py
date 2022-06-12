@@ -181,22 +181,20 @@ def parse_args():
         help='labels for rgb/pose/audio based action recognition models')
     parser.add_argument(
         '--rgb-config',
-        default='checkpoints/har/timesformer_divST_8x24x1_kinetics400_rgb.py',
+        default='checkpoints/har/timesformer_divST_16x12x1_kinetics.py',
         help='rgb-based action recognizer config file')
     parser.add_argument('--rgb-checkpoint',
                         default='checkpoints/har/timesformer.pth',
                         help='rgb-based action recognizer model checkpoint')
-    parser.add_argument(
-        '--skeleton-config',
-        default='checkpoints/har/slowonly_r50_u54_480e_pr-kinetics.py',
-        help='skeleton-based action recognizer config file')
+    parser.add_argument('--skeleton-config',
+                        default='checkpoints/har/slowonly_u54_kinetics.py',
+                        help='skeleton-based action recognizer config file')
     parser.add_argument('--skeleton-checkpoint',
                         default='checkpoints/har/posec3d.pth',
                         help='pose-based action recognizer model checkpoint')
-    parser.add_argument(
-        '--audio-config',
-        default='checkpoints/har/audioonly_r101_64x1x1_audio_feature.py',
-        help='audio-based action recognizer config file')
+    parser.add_argument('--audio-config',
+                        default='checkpoints/har/audioonly_64x1x1.py',
+                        help='audio-based action recognizer config file')
     parser.add_argument('--audio-checkpoint',
                         default='checkpoints/har/audio.pth',
                         help='audio-based action recognizer model checkpoint')
