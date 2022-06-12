@@ -2,7 +2,7 @@
 
 This is just a fun, side-project to see how State-of-the-art (SOTA) Human Action Recognition (HAR) models fare in the pornographic domain. HAR is a relatively new, active field of research in the deep learning domain, its goal being the identification of human actions from various input streams (e.g. video or sensor).
 
-The pornography domain is interesting from a technical perspective because of its inherent difficulties. Light variations, occlusions, and a tremendous variations of different camera angles make position (action) recognition hard. We can have two identical positions (actions) and yet be captured in such a different camera angle to entirely confuse the model in its predictions.
+The pornography domain is interesting from a technical perspective because of its inherent difficulties. Light variations, occlusions, and a tremendous variations of different camera angles and filming techniques (POV, dedicated camera person) make position (action) recognition hard. We can have two identical positions (actions) and yet be captured in such a different camera perspective to entirely confuse the model in its predictions.
 
 This repository uses three different input streams in order to get the best possible results: rgb frames, human skeleton, and audio. Correspondingly three different models are trained on these input streams and their results are merged through late fusion.
 
@@ -10,7 +10,7 @@ The best current accuracy reached by this multi-model model currently is **75.64
 
 The models work on spatio-temporal data, meaning that they processes video clips rather than single images ([miles-deep](https://github.com/ryanjay0/miles-deep) is using single images for example). This is an inherently superior way of performing action recognition.
 
-Currently, 17 actions are supported. You can find the complete list [here](resources/annotations/annotations.txt). More data would be needed to further improve the models. Help is welcomed. Read on for more information!
+Currently, 17 actions are supported. You can find the complete list [here](resources/annotations/annotations.txt). More data would be needed to further improve the models (help is welcomed). Read on for more information!
 
 ## Motivation & Usages
 
@@ -57,7 +57,7 @@ Checkout the [detailed usage](#late-fusion).
 
 ### Content Filtering
 
-TODO
+TODO: based on if people need it
 
 ### Deployment
 
@@ -79,7 +79,7 @@ The following installation instructions are for ubuntu (hence should also work f
 
 ## Models
 
-The SOTA results are archieved by late-fusing three models based on three input streams. This results in significant improvements compared to only using an RGB-based model. Since more than one action might happen at the same time, it is best to consider the top 2 accuracy as a performance measurement. Hence, currently the multimodial model has a `75.64%` accuracy. However, since the dataset is quite small and in total only ~50 experiments have been performed, there is a lot of room for improvement.
+The SOTA results are archieved by late-fusing three models based on three input streams. This results in significant improvements compared to only using an RGB-based model. Since more than one action might happen at the same time (and moreover, currently, some of the actions/positions have are conceptually overlapping), it is best to consider the top 2 accuracy as a performance measurement. Hence, currently the multimodial model has a `~75%` accuracy. However, since the dataset is quite small and in total only ~50 experiments have been performed, there is a lot of room for improvement.
 
 ### Multi-Modial (Rgb + Skeleton + Audio)
 
@@ -89,13 +89,13 @@ Another approach would be to train a model with two of the input streams at a ti
 
 Likewise, the skeleton-based model can only be used in those instances where the pose estimation is accurate above a certain confidence threshold (for these experiments the threshold used was 0.4). For example, for actions such as `scoop-up` or `the-snake` it's hard to get an accurate pose estimation in most camera angles due to the proximity of the human bodies in the frame (the poses get fuzzy and mixed up). This then influences the accuracy of the HAR model negatively. However, for actions such as doggy, cowgirl or missionary, the pose estimation is generally good enough to train a HAR model.
 
-If we have a bigger dataset, however, then we will probably have enough instances of clean samples for the difficult actions such as to train all (17) of them with a skeleton-based model. Skeleton based models are according to the current SOTA literature superior to the rgb-based ones. Ideally of course, the pose estimation models should also be fine tuned in the sex domain in order to get a better overall pose estimation.
+However, if we have a bigger dataset, then we will probably have enough instances of clean samples for the difficult actions such as to train all (17) of them with a skeleton-based model. Skeleton based models are according to the current SOTA literature superior to the rgb-based ones. Ideally of course, the pose estimation models should also be fine tuned in the sex domain in order to get a better overall pose estimation.
 
 #### Metrics
 
 Accuracy | Weights
 --- | ---
-Top 1 Accuracy: 0.6329 <br> Top 2 Accuracy: 0.7564 <br> Top 3 Accuracy: 0.8035 <br> Top 4 Accuracy: 0.8384 <br> Top 5 Accuracy: 0.8646 | Rgb: 0.4 <br> Skeleton: 0.8 <br> Audio: 1.0
+Top 1 Accuracy: 0.6362 <br> Top 2 Accuracy: 0.7524 <br> Top 3 Accuracy: 0.8155 <br> Top 4 Accuracy: 0.8521 <br> Top 5 Accuracy: 0.8771 | Rgb: 0.5 <br> Skeleton: 0.6 <br> Audio: 1.0
 
 ### RGB model - [TimeSformer](https://arxiv.org/abs/2102.05095)
 
@@ -109,7 +109,7 @@ top1_acc 0.5669 <br> top2_acc 0.6834 <br> top3_acc 0.7632 <br> top4_acc 0.8096 <
 
 #### Loss
 
-![alt text](resources/plots/timesformer_loss.jpg)
+![alt text](resources/metrics/timesformer_loss.jpg)
 
 #### Classes
 
@@ -125,11 +125,11 @@ Accuracy | Training Speed | Complexity
 --- | --- | ---
 top1_acc 0.8130 <br> top2_acc 0.9191 <br> top3_acc 0.9748 | Avg iter time: 0.8616 s/iter| Flops: 17.83 GFLOPs <br> Params: 2.0 M
 
-Check the [confusion matrix](resources/plots/skeleton_cm.png) for a detailed overview of the performance.
+Check the [confusion matrix](resources/metrics/skeleton_cm.png) for a detailed overview of the performance.
 
 #### Loss
 
-![alt text](resources/plots/posec3d_loss.jpg)
+![alt text](resources/metrics/posec3d_loss.jpg)
 
 #### Classes
 
@@ -137,7 +137,7 @@ Check the [confusion matrix](resources/plots/skeleton_cm.png) for a detailed ove
 
 ### Audio Model - Simple ResNet based on [Audiovisual SlowFast](https://arxiv.org/abs/2001.08740)
 
-A simple ResNet 101, with some small tweaks, was used. This model definitely needs to be swapped with a better architecture. It is very fast in inference (0.05s / 7s audio clips).
+A simple ResNet 101 (with some small tweaks) was used. This model definitely needs to be swapped with a better architecture. It is very fast in inference (0.05s / 7s audio clips).
 
 #### Metrics
 
@@ -145,11 +145,11 @@ Accuracy | Training Speed
 --- | ---
 top1_acc 0.6867 <br> top2_acc 0.9038 <br> top3_acc 0.9663 | Avg iter time: 0.2747 s/iter
 
-Check the [confusion matrix](resources/plots/audio_cm.png) for a detailed overview of the performance.
+Check the [confusion matrix](resources/metrics/audio_cm.png) for a detailed overview of the performance.
 
 #### Loss
 
-![alt text](resources/plots/audio_loss.jpg)
+![alt text](resources/metrics/audio_loss.jpg)
 
 #### Classes
 
@@ -157,13 +157,15 @@ Check the [confusion matrix](resources/plots/audio_cm.png) for a detailed overvi
 
 ## Dataset
 
-First things first, [here](https://www.womenshealthmag.com/sex-and-love/a19943165/sex-positions-guide/) is a list of definitions of the sex positions used in this project in case there is any confusion. `fondling`, in addition to the meaning of the word, was also thought of as a general placeholder, e.g. when it is unclear what action there is. In reality, however, it's ability to be a general placeholder is limited because I only got 48 minutes of data for this action.
+First things first, [here](https://www.womenshealthmag.com/sex-and-love/a19943165/sex-positions-guide/) is a list of definitions of the sex positions used in this project in case there is any confusion. `fondling`, in addition to the meaning of the word, was also thought of as a general placeholder, e.g. when it is unclear what action there is. In reality, however, its ability to be a general placeholder is limited because I only got 48 minutes of data for this action.
 
-In general, a train/val split of 0.8/0.2 was used for all the datasets. The length of the clips in training & validation sets currently is 7 seconds (the main motivation was to include the more ephemeral actions such as `cumshot` or `kissing`). In total ~594 videos were annotated with a total of **2674** minutes. Check out the [annotation distribution](resources/annotation_distribution(min).json) in time (minutes) for each of the 17 classes for more information. The dataset was not perfectly annotated but the number of wrong annotations should be small and hence the drop in performance should be minimal.
+The gathered dataset is very inclusive and consists of a variety of recordings such as POV, professionally filmed, amateur, with or without a dedicated camera person, etc. It also includes all kinds of environments, people, and camera angles. The problem is probably much easier to solve if only professional recordings with a dedicated camera person are used and hence this was avoided.
+
+In general, a train/val split of 0.8/0.2 was used for all the datasets. The length of the clips in training & validation sets currently is 7 seconds (the main motivation was to include the more ephemeral actions such as `cumshot` or `kissing`). In total there were around 600 videos amounting to **2674** minutes of footage. Check out the [annotation distribution](resources/annotation_distribution(min).json) in time (minutes) for each of the 17 classes for more information. The dataset was not perfectly annotated but the number of wrong annotations should be small and hence the drop in performance should be minimal.
 
 In general, it can be said that this is a small dataset. Normally ~44 hours of footage would be enough for 17 actions. However, each position has a tremendous variety when it comes to camera perspectives, which makes the recognition task hard if there aren't enough samples. This would also mean that we should ideally have the same amount of footage for each different perspective. However, labeling the dataset was already very time-consuming and I didn't keep track of this point.
 
-A HAR model trained on 3D poses might be able solve this camera-perspective problem. However, due to the fact that 3D pose estimation is less accurate than 2D pose estimation, and I already noticed problems with the accuracy of the 2D as already discussed, this was not tried (yet). Ideally, however, if the dataset is big enough then the camera perspective problem should be naturally solved.
+A HAR model trained on 3D poses might be able solve this camera-perspective problem. However, due to the fact that 3D pose estimation is less accurate than 2D pose estimation, and I already noticed problems with the accuracy of the 2D (see [here](#2d-pose)), this has not been tried (yet). Ideally, however, if the dataset is big enough then the camera perspective problem should be naturally solved.
 
 The dataset is also slightly imbalanced, which actually makes the rgb models slightly biased towards the positions (actions) that have more data.
 
@@ -189,7 +191,7 @@ As a preliminary pre-processing step audios that are not loud enough were first 
 
 In total there are about 5.9K training clips & 1.5K validation clips.
 
-## Scripts' Docs
+## Script Docs
 
 ### Multimodial Demo
 
