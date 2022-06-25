@@ -1,9 +1,9 @@
 [submodule "mmaction2"]
 	path = mmaction2
-	url = git@github.com:open-mmlab/mmaction2.git
+	url = https://github.com/open-mmlab/mmaction2.git
 [submodule "mmdetection"]
 	path = mmdetection
-	url = git@github.com:open-mmlab/mmdetection.git
+	url = https://github.com/open-mmlab/mmdetection.git
 [submodule "mmpose"]
 	path = mmpose
-	url = git@github.com:open-mmlab/mmpose.git
+	url = https://github.com/open-mmlab/mmpose.git
