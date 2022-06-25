@@ -205,8 +205,7 @@ def parse_args():
         help='human pose estimation config file path (from mmpose)')
     parser.add_argument(
         '--pose-checkpoint',
-        default=('https://download.openmmlab.com/mmpose/top_down/hrnet/'
-                 'hrnet_w32_coco_256x192-c78dce93_20200708.pth'),
+        default='checkpoints/pose/hrnet_w32_coco_256x192.pth',
         help='human pose estimation checkpoint file/url (used for skeleton)')
     parser.add_argument(
         '--det-config',
@@ -214,10 +213,7 @@ def parse_args():
         help='human detection config file path (from mmdet)')
     parser.add_argument(
         '--det-checkpoint',
-        default=('http://download.openmmlab.com/mmdetection/v2.0/faster_rcnn/'
-                 'faster_rcnn_r50_fpn_2x_coco/'
-                 'faster_rcnn_r50_fpn_2x_coco_'
-                 'bbox_mAP-0.384_20200504_210434-a5d8aa15.pth'),
+        default='checkpoints/detector/faster_rcnn_r50_fpn_1x_coco-person.pth',
         help='human detection model checkpoint (used for skeleton')
     parser.add_argument('--det-score-thr',
                         type=float,
