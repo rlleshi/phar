@@ -150,15 +150,16 @@ def pose_inference(frame_paths, det_results):
 def cleanup(original_video, tmp_out_video, out_video):
     """Add original audio to demo & cleanup."""
     # extract & add audio to demo
-    cmd_extract = (f'ffmpeg -i "{original_video}" -f mp3 -ab 192000 -vn '
-                   'audio.mp3 -y')
-    os.popen(cmd_extract)  # ? change os.popen
-    time.sleep(5)  # ! Sleep time should be proportional to video len
-    cmd_add = (f'ffmpeg -i {tmp_out_video} -i audio.mp3 -c copy -map 0:v:0 '
-               f'-map 1:a:0 {out_video} -y')
-    os.popen(cmd_add)
-    time.sleep(5)
-
+    subargs_extract = [
+        'ffmpeg', '-i', original_video, '-f', 'mp3', '-ab', '192000', '-vn',
+        'audio.mp3', '-y'
+    ]
+    subprocess.run(subargs_extract, capture_output=True)
+    subargs_add = [
+        'ffmpeg', '-i', tmp_out_video, '-i', 'audio.mp3', '-c', 'copy', '-map',
+        '0:v:0', '-map', '1:a:0', out_video, '-y'
+    ]
+    subprocess.run(subargs_add, capture_output=True)
     # cleanup
     os.remove('audio.mp3')
     os.remove(tmp_out_video)
