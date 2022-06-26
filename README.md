@@ -14,7 +14,9 @@ Currently, 17 actions are supported. You can find the complete list [here](resou
 
 ## Supported Features
 
-First download the HAR models [here](https://github.com/rlleshi/phar/releases/tag/v1.0.0). Then move them inside the `checkpoints/har` folder.
+First download the human detector [here](http://download.openmmlab.com/mmdetection/v2.0/faster_rcnn/faster_rcnn_r50_fpn_2x_coco/faster_rcnn_r50_fpn_2x_coco_bbox_mAP-0.384_20200504_210434-a5d8aa15.pth), pose model [here](https://download.openmmlab.com/mmpose/top_down/hrnet/hrnet_w32_coco_256x192-c78dce93_20200708.pth), and HAR models [here](https://github.com/rlleshi/phar/releases/tag/v1.0.0). Then move them inside the `checkpoints/har` folder.
+
+Or just use a docker container from the [image](#docker).
 
 ### Video Demo
 
@@ -64,6 +66,12 @@ Once we have detailed information about the kind of actions/positions that are h
 4. Cutting content out (for example non-sexual content)
 
 ## Installation
+
+### Docker
+
+Build the docker image: `docker build -f docker/Dockerfile . -t rlleshi/phar`
+
+### Manual Installation
 
 This project is based on [MMAction2](https://github.com/open-mmlab/mmaction2).
 

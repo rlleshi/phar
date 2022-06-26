@@ -9,7 +9,7 @@ import pandas as pd
 import seaborn as sns
 from rich.console import Console
 
-sys.path.append('./tools')  # noqa: E501
+sys.path.append('./src')  # noqa: E501
 import utils as utils  # noqa isort:skip
 
 CONSOLE = Console()

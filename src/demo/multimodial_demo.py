@@ -7,7 +7,7 @@ import subprocess
 import sys
 import time
 from itertools import repeat
-from multiprocessing import Manager, Pool, cpu_count
+from multiprocessing import Manager, Pool
 from pathlib import Path
 
 import cv2
@@ -185,7 +185,7 @@ def parse_args():
         default='checkpoints/har/timesformer_divST_16x12x1_kinetics.py',
         help='rgb-based action recognizer config file')
     parser.add_argument('--rgb-checkpoint',
-                        default='checkpoints/har/timesformer.pth',
+                        default='checkpoints/har/timeSformer.pth',
                         help='rgb-based action recognizer model checkpoint')
     parser.add_argument('--skeleton-config',
                         default='checkpoints/har/slowonly_u54_kinetics.py',
@@ -222,7 +222,7 @@ def parse_args():
     parser.add_argument(
         '--num-processes',
         type=int,
-        default=(cpu_count() - 1 or 1),
+        default=4,
         help='Number of processes to extract subclips from the video')
     parser.add_argument('--device',
                         type=str,
