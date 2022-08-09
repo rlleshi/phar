@@ -379,7 +379,7 @@ def audio_inference(clip: str, coeffs: list):
 
     out_feature = f'{osp.splitext(out_audio)[0]}.npy'
     subprocess.run(
-        ['python', AUDIO_FEATURE_SCRIPT, TEMP, TEMP, '--ext', '.wav'],
+        ['python', AUDIO_FEATURE_SCRIPT, TEMP, TEMP, '--ext', 'wav'],
         capture_output=True)
 
     results = inference_recognizer(AUDIO_MODEL, out_feature)
