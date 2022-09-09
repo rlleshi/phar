@@ -428,7 +428,7 @@ def write_results_video(args: dict):
     Args:
         args (dict): parsed args
     """
-    tmp_out_video = f'tmp_{osp.splitext(args.out)[0]}.mp4'
+    tmp_out_video = f'{osp.splitext(args.out)[0]}_tmp.mp4'
     video = cv2.VideoCapture(args.video)
     video_writer = cv2.VideoWriter(
         tmp_out_video, cv2.VideoWriter_fourcc(*'MP4V'),
