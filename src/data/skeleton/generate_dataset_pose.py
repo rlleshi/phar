@@ -1,6 +1,7 @@
 import logging
 import os
 import os.path as osp
+import pickle
 import random
 import subprocess
 import sys
@@ -14,10 +15,31 @@ import numpy as np
 from tqdm import tqdm
 
 sys.path.append('human-action-recognition/')  # noqa
-import har.tools.helpers as helpers  # noqa isort:skip
 
 CLIPS_PATH = 'clips'
 RESULT_PATH = 'results'
+
+
+def merge_pose_data(in_dir, out_dir, split):
+    """Given the pose estimation of single videos stored as dictionaries in.
+
+    .pkl format, merge them together and form a list of dictionaries.
+
+    Args:
+        in_dir ([string]): path to the .pkl files for individual clips
+        out_dir ([string]): path to the out dir
+        split ([string]): train, val, test
+    """
+    result = []
+    for ann in os.listdir(in_dir):
+        if ann.endswith('.pkl'):
+            with open(osp.join(in_dir, ann), 'rb') as f:
+                annotations = pickle.load(f)
+        result.append(annotations)
+
+    out_file = osp.join(out_dir, f'bast_{split}.pkl')
+    with open(out_file, 'wb') as out:
+        pickle.dump(result, out, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 def generate_structure(path):
@@ -58,7 +80,7 @@ def merge_results(args):
     for split in args.split_set:
         in_dir = osp.join(args.out_dir, CLIPS_PATH, split)
         out_dir = osp.join(args.out_dir, RESULT_PATH)
-        helpers.merge_pose_data(in_dir, out_dir, split)
+        merge_pose_data(in_dir, out_dir, split)
 
 
 def get_pose(video, args, split, gpu):

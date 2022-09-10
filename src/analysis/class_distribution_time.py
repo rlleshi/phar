@@ -23,7 +23,10 @@ def get_actions_with_timestamps(path):
     VIA annotator.
     """
     results = []
-    df = pd.read_csv(path)
+    try:
+        df = pd.read_csv(path)
+    except Exception:
+        CONSOLE.print(f'Error reading {path}', style='error')
     for i in range(1, len(df)):
         temp = str(df.iloc[i].value_counts()).split(' ')
         results.append({

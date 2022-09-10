@@ -79,8 +79,8 @@ The following installation instructions are for ubuntu (hence should also work f
 
 0. Clone this repo and its submodules: `git clone --recurse-submodules git@github.com:rlleshi/phar.git` and then create and environment with python 3.8+.
 1. Install torch (of course, it is recommended that you have CUDA & CUDNN installed).
-2. Install Mim: `pip install git+https://github.com/open-mmlab/mim.git`.
-3. Install MMAction2 through `mim`: `mim install mmaction2 -f https://github.com/open-mmlab/mmaction2.git`. If installing with mim fails, then checkout the detailed installation steps [here](https://mmaction2.readthedocs.io/en/latest/install.html).
+2. Install the correct version of `mmcv` based on your CUDA & Torch, e.g. `pip install mmcv-full==1.3.18 -f https://download.openmmlab.com/mmcv/dist/cu113/torch1.10.0/index.html`
+3. Install mmaction:2 `cd mmaction2/ && pip install cython --no-cache-dir && pip install --no-cache-dir -e .`
 4. Install MMPose, [link](https://mmpose.readthedocs.io/en/latest/install.html).
 5. Install MMDetection, [link](https://mmdetection.readthedocs.io/en/latest/get_started.html#installation).
 6. Install extra dependencies: `pip install -r requirements/extra.txt`.
