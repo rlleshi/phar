@@ -93,7 +93,13 @@ def train_model(config: str,
     subprocess.run(subargs)
 
 
-schedule.every().friday.at('03:30').do(
+def demo(in_video, out_video):
+    script_path = 'src/demo/multimodial_demo.py'
+    subargs = ['python', script_path, in_video, out_video]
+    subprocess.run(subargs)
+
+
+schedule.every().friday.at('02:30').do(
     train_model,
     config=('configs/timesformer/'
             'timesformer_divST_8x32x1_15e_kinetics400_rgb.py'),

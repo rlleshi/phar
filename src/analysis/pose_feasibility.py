@@ -12,7 +12,7 @@ from rich.console import Console
 from tqdm import tqdm
 
 sys.path.append('./src')  # noqa: E501
-import data.skeleton.pose_extraction as pose_extraction  # noqa isort:skip
+import data.pose_extraction as pose_extraction  # noqa isort:skip
 
 try:
     from mmdet.apis import init_detector
@@ -36,7 +36,7 @@ def parse_args():
     parser.add_argument('--out-dir', default='mmaction2/data/phar/pose')
     parser.add_argument('--ann',
                         type=str,
-                        default='resources/annotations/annotations_pose.txt',
+                        default='resources/annotations/pose.txt',
                         help='annotation file')
     parser.add_argument('--splits',
                         nargs='+',
@@ -45,7 +45,7 @@ def parse_args():
                         help='the splits where clips are found')
     parser.add_argument('--pose-score-thr',
                         type=float,
-                        default=0.4,
+                        default=0.2,
                         help='pose estimation score threshold')
     parser.add_argument('--resume',
                         action='store_true',
@@ -104,7 +104,7 @@ def main():
     sub_args.det_score_thr = 0.5
     sub_args.pose_score_thr = args.pose_score_thr
     sub_args.ann = args.ann
-    sub_args.correct_rate = 0.4
+    sub_args.correct_rate = 0.2
     sub_args.filter_pose = False
 
     resume_list = []

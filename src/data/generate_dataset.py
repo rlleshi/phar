@@ -14,7 +14,7 @@ import pandas as pd
 from rich.console import Console
 from tqdm.contrib.concurrent import process_map
 
-sys.path.append('./tools')  # noqa: E501
+sys.path.append('./src')  # noqa: E501
 import utils as utils  # noqa isort:skip
 
 CONSOLE = Console()
@@ -70,7 +70,7 @@ def parse_args():
                         help='source video directory')
     parser.add_argument('--ann',
                         type=str,
-                        default='resources/annotations/annotations.txt',
+                        default='resources/annotations/all.txt',
                         help='annotation file')
     parser.add_argument('--out-dir',
                         default='mmaction2/data/phar',
@@ -78,11 +78,11 @@ def parse_args():
     parser.add_argument('--split',
                         type=float,
                         nargs='+',
-                        default=[0.7, 0.15, 0.15],
+                        default=[0.8, 0.2, 0],
                         help='train/val/test split')
     parser.add_argument('--clip-len',
                         type=int,
-                        default=7,
+                        default=10,
                         help='length of each clip')
     parser.add_argument('--num-processes',
                         type=int,

@@ -15,7 +15,7 @@ from tqdm import tqdm
 from tqdm.contrib.concurrent import process_map
 from vidaug import augmentors as va
 
-sys.path.append('./tools')  # noqa
+sys.path.append('./src')  # noqa
 import utils as utils  # noqa isort:skip
 
 CONSOLE = Console()
