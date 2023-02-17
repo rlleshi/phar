@@ -1,5 +1,11 @@
 # P-HAR: Porn Human Action Recognition
 
+## Update
+
+:star: In the meanwhile, I've teamed up with a startup to develop models that can surpass **90%** accuracy. Checkout [civilizedsoftware.com](https://www.civilizedsoftware.com/project/human-action-recognition-har) for more details.
+
+## Introduction
+
 This is just a fun, side-project to see how State-of-the-art (SOTA) Human Action Recognition (HAR) models fare in the pornographic domain. HAR is a relatively new, active field of research in the deep learning domain, its goal being the identification of human actions from various input streams (e.g. video or sensor).
 
 The pornography domain is interesting from a technical perspective because of its inherent difficulties. Light variations, occlusions, and a tremendous variations of different camera angles and filming techniques (POV, dedicated camera person) make position (action) recognition hard. We can have two identical positions (actions) and yet be captured in such a different camera perspective to entirely confuse the model in its predictions.
