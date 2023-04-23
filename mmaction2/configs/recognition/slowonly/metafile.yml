@@ -1,0 +1,216 @@
+Collections:
+  - Name: SlowOnly
+    README: configs/recognition/slowonly/README.md
+    Paper:
+      URL: https://arxiv.org/abs/1812.03982
+      Title: 'SlowFast Networks for Video Recognition'
+
+Models:
+  - Name: slowonly_r50_8xb16-4x16x1-256e_kinetics400-rgb
+    Config: configs/recognition/slowonly/slowonly_r50_8xb16-4x16x1-256e_kinetics400-rgb.py
+    In Collection: SlowOnly
+    Metadata:
+      Architecture: ResNet50
+      Batch Size: 16
+      Epochs: 256
+      FLOPs: 27.38G
+      Parameters: 32.45M
+      Pretrained: None
+      Resolution: short-side 320
+      Training Data: Kinetics-400
+      Training Resources: 8 GPUs
+    Modality: RGB
+    Results:
+      - Dataset: Kinetics-400
+        Task: Action Recognition
+        Metrics:
+          Top 1 Accuracy: 72.68
+          Top 5 Accuracy: 90.68
+    Training Log: https://download.openmmlab.com/mmaction/v1.0/recognition/slowonly/slowonly_r50_8xb16-4x16x1-256e_kinetics400-rgb/slowonly_r50_4x16x1_256e_8xb16_kinetics400-rgb.log
+    Weights: https://download.openmmlab.com/mmaction/v1.0/recognition/slowonly/slowonly_r50_8xb16-4x16x1-256e_kinetics400-rgb/slowonly_r50_4x16x1_256e_8xb16_kinetics400-rgb_20220901-f6a40d08.pth
+
+  - Name: slowonly_r50_8xb16-8x8x1-256e_kinetics400-rgb
+    Config: configs/recognition/slowonly/slowonly_r50_8xb16-8x8x1-256e_kinetics400-rgb.py
+    In Collection: SlowOnly
+    Metadata:
+      Architecture: ResNet50
+      Batch Size: 16
+      Epochs: 256
+      FLOPs: 54.75G
+      Parameters: 32.45M
+      Pretrained: None
+      Resolution: short-side 320
+      Training Data: Kinetics-400
+      Training Resources: 8 GPUs
+    Modality: RGB
+    Results:
+      - Dataset: Kinetics-400
+        Task: Action Recognition
+        Metrics:
+          Top 1 Accuracy: 74.82
+          Top 5 Accuracy: 91.80
+    Training Log: https://download.openmmlab.com/mmaction/v1.0/recognition/slowonly/slowonly_r50_8xb16-8x8x1-256e_kinetics400-rgb/slowonly_r50_8xb16-8x8x1-256e_kinetics400-rgb.log
+    Weights: https://download.openmmlab.com/mmaction/v1.0/recognition/slowonly/slowonly_r50_8xb16-8x8x1-256e_kinetics400-rgb/slowonly_r50_8xb16-8x8x1-256e_kinetics400-rgb_20220901-2132fc87.pth
+
+
+  - Name: slowonly_r101_8xb16-8x8x1-196e_kinetics400-rgb
+    Config: configs/recognition/slowonly/slowonly_r101_8xb16-8x8x1-196e_kinetics400-rgb.py
+    In Collection: SlowOnly
+    Metadata:
+      Architecture: ResNet101
+      Batch Size: 16
+      Epochs: 196
+      FLOPs: 112G
+      Parameters: 60.36M
+      Pretrained: None
+      Resolution: short-side 320
+      Training Data: Kinetics-400
+      Training Resources: 8 GPUs
+    Modality: RGB
+    Results:
+      - Dataset: Kinetics-400
+        Task: Action Recognition
+        Metrics:
+          Top 1 Accuracy: 76.28
+          Top 5 Accuracy: 92.70
+    Training Log: https://download.openmmlab.com/mmaction/v1.0/recognition/slowonly/slowonly_r101_8xb16-8x8x1-196e_kinetics400-rgb/slowonly_r101_8xb16-8x8x1-196e_kinetics400-rgb.log
+    Weights: https://download.openmmlab.com/mmaction/v1.0/recognition/slowonly/slowonly_r101_8xb16-8x8x1-196e_kinetics400-rgb/slowonly_r101_8xb16-8x8x1-196e_kinetics400-rgb_20220901-e6281431.pth
+
+  - Name: slowonly_imagenet-pretrained-r50_8xb16-4x16x1-steplr-150e_kinetics400-rgb
+    Config: configs/recognition/slowonly/slowonly_imagenet-pretrained-r50_8xb16-4x16x1-steplr-150e_kinetics400-rgb.py
+    In Collection: SlowOnly
+    Metadata:
+      Architecture: ResNet50
+      Batch Size: 16
+      Epochs: 150
+      FLOPs: 27.38G
+      Parameters: 32.45M
+      Pretrained: ImageNet
+      Resolution: short-side 320
+      Training Data: Kinetics-400
+      Training Resources: 8 GPUs
+    Modality: RGB
+    Results:
+      - Dataset: Kinetics-400
+        Task: Action Recognition
+        Metrics:
+          Top 1 Accuracy: 74.83
+          Top 5 Accuracy: 91.60
+    Training Log: https://download.openmmlab.com/mmaction/v1.0/recognition/slowonly/slowonly_imagenet-pretrained-r50_8xb16-4x16x1-steplr-150e_kinetics400-rgb/slowonly_imagenet-pretrained-r50_8xb16-4x16x1-steplr-150e_kinetics400-rgb.log
+    Weights: https://download.openmmlab.com/mmaction/v1.0/recognition/slowonly/slowonly_imagenet-pretrained-r50_8xb16-4x16x1-steplr-150e_kinetics400-rgb/slowonly_imagenet-pretrained-r50_8xb16-4x16x1-steplr-150e_kinetics400-rgb_20220901-e7b65fad.pth
+
+  - Name: slowonly_imagenet-pretrained-r50_8xb16-8x8x1-steplr-150e_kinetics400-rgb
+    Config: configs/recognition/slowonly/slowonly_imagenet-pretrained-r50_8xb16-8x8x1-steplr-150e_kinetics400-rgb.py
+    In Collection: SlowOnly
+    Metadata:
+      Architecture: ResNet50
+      Batch Size: 16
+      Epochs: 150
+      FLOPs: 54.75G
+      Parameters: 32.45M
+      Pretrained: ImageNet
+      Resolution: short-side 320
+      Training Data: Kinetics-400
+      Training Resources: 8 GPUs
+    Modality: RGB
+    Results:
+      - Dataset: Kinetics-400
+        Task: Action Recognition
+        Metrics:
+          Top 1 Accuracy: 75.96
+          Top 5 Accuracy: 92.40
+    Training Log: https://download.openmmlab.com/mmaction/v1.0/recognition/slowonly/slowonly_imagenet-pretrained-r50_8xb16-8x8x1-steplr-150e_kinetics400-rgb/slowonly_imagenet-pretrained-r50_8xb16-8x8x1-steplr-150e_kinetics400-rgb.log
+    Weights: https://download.openmmlab.com/mmaction/v1.0/recognition/slowonly/slowonly_imagenet-pretrained-r50_8xb16-8x8x1-steplr-150e_kinetics400-rgb/slowonly_imagenet-pretrained-r50_8xb16-8x8x1-steplr-150e_kinetics400-rgb_20220901-df42dc84.pth
+
+
+  - Name: slowonly_r50-in1k-pre-nl-embedded-gaussian_8xb16-4x16x1-steplr-150e_kinetics400-rgb
+    Config: configs/recognition/slowonly/slowonly_r50-in1k-pre-nl-embedded-gaussian_8xb16-4x16x1-steplr-150e_kinetics400-rgb.py
+    In Collection: SlowOnly
+    Metadata:
+      Architecture: ResNet50
+      Batch Size: 16
+      Epochs: 150
+      FLOPs: 43.23G
+      Parameters: 39.81M
+      Pretrained: ImageNet
+      Resolution: short-side 320
+      Training Data: Kinetics-400
+      Training Resources: 8 GPUs
+    Modality: RGB
+    Results:
+      - Dataset: Kinetics-400
+        Task: Action Recognition
+        Metrics:
+          Top 1 Accuracy: 74.84
+          Top 5 Accuracy: 91.41
+    Training Log: https://download.openmmlab.com/mmaction/v1.0/recognition/slowonly/slowonly_r50-in1k-pre-nl-embedded-gaussian_8xb16-4x16x1-steplr-150e_kinetics400-rgb/slowonly_r50-in1k-pre-nl-embedded-gaussian_8xb16-4x16x1-steplr-150e_kinetics400-rgb.log
+    Weights: https://download.openmmlab.com/mmaction/v1.0/recognition/slowonly/slowonly_r50-in1k-pre-nl-embedded-gaussian_8xb16-4x16x1-steplr-150e_kinetics400-rgb/slowonly_r50-in1k-pre-nl-embedded-gaussian_8xb16-4x16x1-steplr-150e_kinetics400-rgb_20220901-cf739c75.pth
+
+  - Name: slowonly_r50-in1k-pre-nl-embedded-gaussian_8xb16-8x8x1-steplr-150e_kinetics400-rgb
+    Config: configs/recognition/slowonly/slowonly_r50-in1k-pre-nl-embedded-gaussian_8xb16-8x8x1-steplr-150e_kinetics400-rgb.py
+    In Collection: SlowOnly
+    Metadata:
+      Architecture: ResNet50
+      Batch Size: 16
+      Epochs: 150
+      FLOPs: 96.66G
+      Parameters: 39.81M
+      Pretrained: ImageNet
+      Resolution: short-side 320
+      Training Data: Kinetics-400
+      Training Resources: 8 GPUs
+    Modality: RGB
+    Results:
+      - Dataset: Kinetics-400
+        Task: Action Recognition
+        Metrics:
+          Top 1 Accuracy: 76.35
+          Top 5 Accuracy: 92.18
+    Training Log: https://download.openmmlab.com/mmaction/v1.0/recognition/slowonly/slowonly_r50-in1k-pre-nl-embedded-gaussian_8xb16-8x8x1-steplr-150e_kinetics400-rgb/slowonly_r50-in1k-pre-nl-embedded-gaussian_8xb16-8x8x1-steplr-150e_kinetics400-rgb.log
+    Weights: https://download.openmmlab.com/mmaction/v1.0/recognition/slowonly/slowonly_r50-in1k-pre-nl-embedded-gaussian_8xb16-8x8x1-steplr-150e_kinetics400-rgb/slowonly_r50-in1k-pre-nl-embedded-gaussian_8xb16-8x8x1-steplr-150e_kinetics400-rgb_20220901-df42dc84.pth
+
+  - Name: slowonly_imagenet-pretrained-r50_16xb16-4x16x1-steplr-150e_kinetics700-rgb
+    Config: configs/recognition/slowonly/slowonly_imagenet-pretrained-r50_16xb16-4x16x1-steplr-150e_kinetics700-rgb.py
+    In Collection: SlowOnly
+    Metadata:
+      Architecture: ResNet50
+      Batch Size: 16
+      Epochs: 150
+      FLOPs: 27.38G
+      Parameters: 32.45M
+      Pretrained: ImageNet
+      Resolution: short-side 320
+      Training Data: Kinetics-400
+      Training Resources: 16 GPUs
+    Modality: RGB
+    Results:
+      - Dataset: Kinetics-700
+        Task: Action Recognition
+        Metrics:
+          Top 1 Accuracy: 65.18
+          Top 5 Accuracy: 86.05
+    Training Log: https://download.openmmlab.com/mmaction/v1.0/recognition/slowonly/slowonly_imagenet-pretrained-r50_16xb16-4x16x1-steplr-150e_kinetics700-rgb/slowonly_imagenet-pretrained-r50_16xb16-4x16x1-steplr-150e_kinetics700-rgb.log
+    Weights: https://download.openmmlab.com/mmaction/v1.0/recognition/slowonly/slowonly_imagenet-pretrained-r50_8xb16-4x16x1-steplr-150e_kinetics700-rgb/slowonly_imagenet-pretrained-r50_16xb16-4x16x1-steplr-150e_kinetics700-rgb_20220901-f73b3e89.pth
+
+  - Name: slowonly_imagenet-pretrained-r50_16xb16-8x8x1-steplr-150e_kinetics700-rgb
+    Config: configs/recognition/slowonly/slowonly_imagenet-pretrained-r50_16xb16-8x8x1-steplr-150e_kinetics700-rgb.py
+    In Collection: SlowOnly
+    Metadata:
+      Architecture: ResNet50
+      Batch Size: 16
+      Epochs: 150
+      FLOPs: 54.75G
+      Parameters: 32.45M
+      Pretrained: ImageNet
+      Resolution: short-side 320
+      Training Data: Kinetics-400
+      Training Resources: 16 GPUs
+    Modality: RGB
+    Results:
+      - Dataset: Kinetics-700
+        Task: Action Recognition
+        Metrics:
+          Top 1 Accuracy: 66.93
+          Top 5 Accuracy: 87.47
+    Training Log: https://download.openmmlab.com/mmaction/v1.0/recognition/slowonly/slowonly_imagenet-pretrained-r50_16xb16-8x8x1-steplr-150e_kinetics700-rgb/slowonly_imagenet-pretrained-r50_16xb16-8x8x1-steplr-150e_kinetics700-rgb.log
+    Weights: https://download.openmmlab.com/mmaction/v1.0/recognition/slowonly/slowonly_imagenet-pretrained-r50_8xb16-8x8x1-steplr-150e_kinetics700-rgb/slowonly_imagenet-pretrained-r50_16xb16-8x8x1-steplr-150e_kinetics700-rgb_20220901-4098e1eb.pth

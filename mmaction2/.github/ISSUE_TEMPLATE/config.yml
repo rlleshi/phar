@@ -1,0 +1,12 @@
+blank_issues_enabled: false
+
+contact_links:
+  - name: 📚 MMAction2 Documentation (官方文档)
+    url: https://mmaction2.readthedocs.io/en/latest
+    about: Check if your question is answered in docs
+  - name: 💬 Forum (寻求帮助)
+    url: https://github.com/open-mmlab/mmaction2/discussions
+    about: Ask general usage questions and discuss with other MMAction2 community members
+  - name: 🌐 Explore OpenMMLab (官网)
+    url: https://openmmlab.com/
+    about: Get know more about OpenMMLab

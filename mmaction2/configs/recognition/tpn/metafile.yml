@@ -1,0 +1,73 @@
+Collections:
+- Name: TPN
+  README: configs/recognition/tpn/README.md
+  Paper:
+    URL: https://arxiv.org/abs/2004.03548
+    Title: Temporal Pyramid Network for Action Recognition
+Models:
+- Config: configs/recognition/tpn/tpn-slowonly_r50_8xb8-8x8x1-150e_kinetics400-rgb.py
+  In Collection: TPN
+  Metadata:
+    Architecture: ResNet50
+    Batch Size: 8
+    Epochs: 150
+    FLOPs: 66014576640
+    Parameters: 91498336
+    Pretrained: ImageNet
+    Resolution: short-side 320
+    Training Data: Kinetics-400
+    Training Resources: 32 GPUs
+  Modality: RGB
+  Name: tpn-slowonly_r50_8xb8-8x8x1-150e_kinetics400-rgb
+  Results:
+  - Dataset: Kinetics-400
+    Metrics:
+      Top 1 Accuracy: 74.20
+      top5 accuracy: 91.48
+    Task: Action Recognition
+  Training Log: https://download.openmmlab.com/mmaction/v1.0/recognition/tpn/tpn-slowonly_r50_8xb8-8x8x1-150e_kinetics400-rgb/tpn-slowonly_r50_8xb8-8x8x1-150e_kinetics400-rgb.log
+  Weights: https://download.openmmlab.com/mmaction/v1.0/recognition/tpn/tpn-slowonly_r50_8xb8-8x8x1-150e_kinetics400-rgb/tpn-slowonly_r50_8xb8-8x8x1-150e_kinetics400-rgb_20220913-97d0835d.pth
+- Config: configs/recognition/tpn/tpn-slowonly_imagenet-pretrained-r50_8xb8-8x8x1-150e_kinetics400-rgb.py
+  In Collection: TPN
+  Metadata:
+    Architecture: ResNet50
+    Batch Size: 8
+    Epochs: 150
+    FLOPs: 66014576640
+    Parameters: 91498336
+    Pretrained: ImageNet
+    Resolution: short-side 320
+    Training Data: Kinetics-400
+    Training Resources: 32 GPUs
+  Modality: RGB
+  Name: tpn-slowonly_imagenet-pretrained-r50_8xb8-8x8x1-150e_kinetics400-rgb
+  Results:
+  - Dataset: Kinetics-400
+    Metrics:
+      Top 1 Accuracy: 76.74
+      top5 accuracy: 92.57
+    Task: Action Recognition
+  Training Log: https://download.openmmlab.com/mmaction/v1.0/recognition/tpn/tpn-slowonly_imagenet-pretrained-r50_8xb8-8x8x1-150e_kinetics400-rgb/tpn-slowonly_imagenet-pretrained-r50_8xb8-8x8x1-150e_kinetics400-rgb.log
+  Weights: https://download.openmmlab.com/mmaction/v1.0/recognition/tpn/tpn-slowonly_imagenet-pretrained-r50_8xb8-8x8x1-150e_kinetics400-rgb/tpn-slowonly_imagenet-pretrained-r50_8xb8-8x8x1-150e_kinetics400-rgb_20220913-fed3f4c1.pth
+- Config: configs/recognition/tpn/tpn-tsm_imagenet-pretrained-r50_8xb8-1x1x8-150e_sthv1-rgb.py
+  In Collection: TPN
+  Metadata:
+    Architecture: ResNet50
+    Batch Size: 8
+    Epochs: 150
+    FLOPs: 54202822656
+    Parameters: 82445724
+    Pretrained: TSM
+    Resolution: height 100
+    Training Data: SthV1
+    Training Resources: 48 GPUs
+  Modality: RGB
+  Name: tpn-tsm_imagenet-pretrained-r50_8xb8-1x1x8-150e_sthv1-rgb
+  Results:
+  - Dataset: SthV1
+    Metrics:
+      Top 1 Accuracy: 51.87
+      Top 5 Accuracy: 79.67
+    Task: Action Recognition
+  Training Log: https://download.openmmlab.com/mmaction/v1.0/recognition/tpn/tpn-tsm_imagenet-pretrained-r50_8xb8-1x1x8-150e_sthv1-rgb/tpn-tsm_imagenet-pretrained-r50_8xb8-1x1x8-150e_sthv1-rgb.log
+  Weights: (https://download.openmmlab.com/mmaction/v1.0/recognition/tpn/tpn-tsm_imagenet-pretrained-r50_8xb8-1x1x8-150e_sthv1-rgb/tpn-tsm_imagenet-pretrained-r50_8xb8-1x1x8-150e_sthv1-rgb_20230221-940a3615.pth

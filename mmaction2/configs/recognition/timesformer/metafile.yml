@@ -1,0 +1,76 @@
+Collections:
+  - Name: TimeSformer
+    README: configs/recognition/timesformer/README.md
+    Paper:
+      URL: https://arxiv.org/abs/2102.05095
+      Title: 'Is Space-Time Attention All You Need for Video Understanding'
+
+Models:
+  - Name: timesformer_divST_8xb8-8x32x1-15e_kinetics400-rgb
+    Config: configs/recognition/timesformer/timesformer_divST_8xb8-8x32x1-15e_kinetics400-rgb.py
+    In Collection: TimeSformer
+    Metadata:
+      Architecture: TimeSformer
+      Batch Size: 8
+      Epochs: 15
+      Pretrained: ImageNet-21K
+      Resolution: 224x224
+      FLOPs: 196G
+      params: 122M
+      Training Data: Kinetics-400
+      Training Resources: 8 GPUs
+    Modality: RGB
+    Results:
+    - Dataset: Kinetics-400
+      Task: Action Recognition
+      Metrics:
+        Top 1 Accuracy: 77.69
+        Top 5 Accuracy: 93.45
+    Training Log: https://download.openmmlab.com/mmaction/v1.0/recognition/timesformer/timesformer_divST_8xb8-8x32x1-15e_kinetics400-rgb/timesformer_divST_8xb8-8x32x1-15e_kinetics400-rgb.log
+    Weights: https://download.openmmlab.com/mmaction/v1.0/recognition/timesformer/timesformer_divST_8xb8-8x32x1-15e_kinetics400-rgb/timesformer_divST_8xb8-8x32x1-15e_kinetics400-rgb_20220815-a4d0d01f.pth
+
+  - Name: timesformer_jointST_8xb8-8x32x1-15e_kinetics400-rgb
+    Config: configs/recognition/timesformer/timesformer_jointST_8xb8-8x32x1-15e_kinetics400-rgb.py
+    In Collection: TimeSformer
+    Metadata:
+      Architecture: TimeSformer
+      Batch Size: 8
+      Epochs: 15
+      Pretrained: ImageNet-21K
+      Resolution: 224x224
+      FLOPs: 180G
+      params: 86.11M
+      Training Data: Kinetics-400
+      Training Resources: 8 GPUs
+    Modality: RGB
+    Results:
+    - Dataset: Kinetics-400
+      Task: Action Recognition
+      Metrics:
+        Top 1 Accuracy: 76.95
+        Top 5 Accuracy: 93.28
+    Training Log: https://download.openmmlab.com/mmaction/v1.0/recognition/timesformer/timesformer_jointST_8xb8-8x32x1-15e_kinetics400-rgb/timesformer_jointST_8xb8-8x32x1-15e_kinetics400-rgb.log
+    Weights: https://download.openmmlab.com/mmaction/v1.0/recognition/timesformer/timesformer_jointST_8xb8-8x32x1-15e_kinetics400-rgb/timesformer_jointST_8xb8-8x32x1-15e_kinetics400-rgb_20220815-8022d1c0.pth
+
+  - Name: timesformer_spaceOnly_8xb8-8x32x1-15e_kinetics400-rgb
+    Config: configs/recognition/timesformer/timesformer_spaceOnly_8xb8-8x32x1-15e_kinetics400-rgb.py
+    In Collection: TimeSformer
+    Metadata:
+      Architecture: TimeSformer
+      Batch Size: 8
+      Epochs: 15
+      Pretrained: ImageNet-21K
+      Resolution: 224x224
+      FLOPs: 141G
+      params: 86.11M
+      Training Data: Kinetics-400
+      Training Resources: 8 GPUs
+    Modality: RGB
+    Results:
+    - Dataset: Kinetics-400
+      Task: Action Recognition
+      Metrics:
+        Top 1 Accuracy: 76.93
+        Top 5 Accuracy: 92.88
+    Training Log: https://download.openmmlab.com/mmaction/v1.0/recognition/timesformer/timesformer_spaceOnly_8xb8-8x32x1-15e_kinetics400-rgb/timesformer_spaceOnly_8xb8-8x32x1-15e_kinetics400-rgb.log
+    Weights: https://download.openmmlab.com/mmaction/v1.0/recognition/timesformer/timesformer_spaceOnly_8xb8-8x32x1-15e_kinetics400-rgb/timesformer_spaceOnly_8xb8-8x32x1-15e_kinetics400-rgb_20220815-78f05367.pth

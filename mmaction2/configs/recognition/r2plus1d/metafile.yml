@@ -1,0 +1,53 @@
+Collections:
+  - Name: R2Plus1D
+    README: configs/recognition/r2plus1d/README.md
+    Paper:
+      URL: https://arxiv.org/abs/1711.11248
+      Title: 'A Closer Look at Spatiotemporal Convolutions for Action Recognition'
+
+Models:
+  - Name: r2plus1d_r34_8xb8-8x8x1-180e_kinetics400-rgb
+    Config: configs/recognition/r2plus1d/r2plus1d_r34_8xb8-8x8x1-180e_kinetics400-rgb.py
+    In Collection: R2Plus1D
+    Metadata:
+      Architecture: ResNet34
+      Batch Size: 8
+      Epochs: 180
+      FLOPs: 53.1G
+      Parameters: 63.8M
+      Pretrained: None
+      Resolution: 224x224
+      Training Data: Kinetics-400
+      Training Resources: 8 GPUs
+    Modality: RGB
+    Results:
+    - Dataset: Kinetics-400
+      Task: Action Recognition
+      Metrics:
+        Top 1 Accuracy: 69.76
+        Top 5 Accuracy: 88.41
+    Training Log: https://download.openmmlab.com/mmaction/v1.0/recognition/r2plus1d/r2plus1d_r34_8xb8-8x8x1-180e_kinetics400-rgb/r2plus1d_r34_8xb8-8x8x1-180e_kinetics400-rgb.log
+    Weights: https://download.openmmlab.com/mmaction/v1.0/recognition/r2plus1d/r2plus1d_r34_8xb8-8x8x1-180e_kinetics400-rgb/r2plus1d_r34_8xb8-8x8x1-180e_kinetics400-rgb_20220812-47cfe041.pth
+
+  - Name: r2plus1d_r34_8xb8-32x2x1-180e_kinetics400-rgb
+    Config: configs/recognition/r2plus1d/r2plus1d_r34_8xb8-32x2x1-180e_kinetics400-rgb.py
+    In Collection: R2Plus1D
+    Metadata:
+      Architecture: ResNet34
+      Batch Size: 8
+      Epochs: 180
+      FLOPs: 213G
+      Parameters: 63.8M
+      Pretrained: None
+      Resolution: 224x224
+      Training Data: Kinetics-400
+      Training Resources: 8 GPUs
+    Modality: RGB
+    Results:
+    - Dataset: Kinetics-400
+      Task: Action Recognition
+      Metrics:
+        Top 1 Accuracy: 75.46
+        Top 5 Accuracy: 92.28
+    Training Log: https://download.openmmlab.com/mmaction/v1.0/recognition/r2plus1d/r2plus1d_r34_8xb8-32x2x1-180e_kinetics400-rgb/r2plus1d_r34_8xb8-32x2x1-180e_kinetics400-rgb.log
+    Weights: https://download.openmmlab.com/mmaction/v1.0/recognition/r2plus1d/r2plus1d_r34_8xb8-32x2x1-180e_kinetics400-rgb/r2plus1d_r34_8xb8-32x2x1-180e_kinetics400-rgb_20220812-4270588c.pth

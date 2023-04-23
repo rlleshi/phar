@@ -1,0 +1,73 @@
+Collections:
+- Name: TIN
+  README: configs/recognition/tin/README.md
+  Paper:
+    URL: https://arxiv.org/abs/2001.06499
+    Title: Temporal Interlacing Network
+Models:
+- Config: configs/recognition/tin/tin_imagenet-pretrained-r50_8xb6-1x1x8-40e_sthv1-rgb.py
+  In Collection: TIN
+  Metadata:
+    Architecture: ResNet50
+    Batch Size: 6
+    Epochs: 40
+    FLOPs: 32962097536
+    Parameters: 23895566
+    Pretrained: ImageNet
+    Resolution: height 100
+    Training Data: SthV1
+    Training Resources: 32 GPUs
+  Modality: RGB
+  Name: tin_imagenet-pretrained-r50_8xb6-1x1x8-40e_sthv1-rgb
+  Results:
+  - Dataset: SthV1
+    Metrics:
+      Top 1 Accuracy: 38.68
+      Top 5 Accuracy: 68.55
+    Task: Action Recognition
+  Training Log: https://download.openmmlab.com/mmaction/v1.0/recognition/tin/tin_imagenet-pretrained-r50_8xb6-1x1x8-40e_sthv1-rgb/tin_imagenet-pretrained-r50_8xb6-1x1x8-40e_sthv1-rgb.log
+  Weights: https://download.openmmlab.com/mmaction/v1.0/recognition/tin/tin_imagenet-pretrained-r50_8xb6-1x1x8-40e_sthv1-rgb/tin_imagenet-pretrained-r50_8xb6-1x1x8-40e_sthv1-rgb_20220913-9b7804d6.pth
+- Config: configs/recognition/tin/tin_imagenet-pretrained-r50_8xb6-1x1x8-40e_sthv2-rgb.py
+  In Collection: TIN
+  Metadata:
+    Architecture: ResNet50
+    Batch Size: 6
+    Epochs: 40
+    FLOPs: 32962097536
+    Parameters: 23895566
+    Pretrained: ImageNet
+    Resolution: height 240
+    Training Data: SthV2
+    Training Resources: 32 GPUs
+  Modality: RGB
+  Name: tin_imagenet-pretrained-r50_8xb6-1x1x8-40e_sthv2-rgb
+  Results:
+  - Dataset: SthV2
+    Metrics:
+      Top 1 Accuracy: 54.78
+      Top 5 Accuracy: 82.18
+    Task: Action Recognition
+  Training Log: https://download.openmmlab.com/mmaction/v1.0/recognition/tin/tin_imagenet-pretrained-r50_8xb6-1x1x8-40e_sthv2-rgb/tin_imagenet-pretrained-r50_8xb6-1x1x8-40e_sthv2-rgb.log
+  Weights: https://download.openmmlab.com/mmaction/v1.0/recognition/tin/tin_imagenet-pretrained-r50_8xb6-1x1x8-40e_sthv2-rgb/tin_imagenet-pretrained-r50_8xb6-1x1x8-40e_sthv2-rgb_20220913-84f9b4b0.pth
+- Config: configs/recognition/tin/tin_kinetics400-pretrained-tsm-r50_1x1x8-50e_kinetics400-rgb.py
+  In Collection: TIN
+  Metadata:
+    Architecture: ResNet50
+    Batch Size: 6
+    Epochs: 50
+    FLOPs: 32965800320
+    Parameters: 24358640
+    Pretrained: TSM-Kinetics400
+    Resolution: short-side 256
+    Training Data: Kinetics-400
+    Training Resources: 32 GPUs
+  Modality: RGB
+  Name: tin_kinetics400-pretrained-tsm-r50_1x1x8-50e_kinetics400-rgb
+  Results:
+  - Dataset: Kinetics-400
+    Metrics:
+      Top 1 Accuracy: 71.77
+      Top 5 Accuracy: 90.36
+    Task: Action Recognition
+  Training Log: https://download.openmmlab.com/mmaction/v1.0/recognition/tin/tin_kinetics400-pretrained-tsm-r50_1x1x8-50e_kinetics400-rgb/tin_kinetics400-pretrained-tsm-r50_1x1x8-50e_kinetics400-rgb.log
+  Weights: https://download.openmmlab.com/mmaction/v1.0/recognition/tin/tin_kinetics400-pretrained-tsm-r50_1x1x8-50e_kinetics400-rgb/tin_kinetics400-pretrained-tsm-r50_1x1x8-50e_kinetics400-rgb_20220913-7f10d0c0.pth

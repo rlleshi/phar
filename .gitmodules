@@ -1,9 +1,0 @@
-[submodule "mmaction2"]
-	path = mmaction2
-	url = https://github.com/open-mmlab/mmaction2.git
-[submodule "mmdetection"]
-	path = mmdetection
-	url = https://github.com/open-mmlab/mmdetection.git
-[submodule "mmpose"]
-	path = mmpose
-	url = https://github.com/open-mmlab/mmpose.git
