@@ -1,4 +1,0 @@
-mmcv
-titlecase
-torch
-torchvision

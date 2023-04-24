@@ -1,3 +1,0 @@
-# How to deploy MMAction2 models
-
-coming soon...
