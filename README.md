@@ -2,7 +2,7 @@
 
 ## Update
 
-:star: In the meanwhile, I've teamed up with a startup to develop models that can surpass **90%** accuracy. Checkout [civilizedsoftware.com](https://www.civilizedsoftware.com/project/human-action-recognition) for more details.
+:star: In the meantime, I've teamed up with a startup to develop a commercial API with models that surpass **90%** accuracy. Get in touch for for more details!
 
 ## Introduction
 
