@@ -2,7 +2,7 @@
 
 ## Update
 
-:star: In the meantime, I've teamed up with a startup to develop a commercial API with models that surpass **90%** accuracy. [Get in touch](mailto:rejnald.lleshi@icloud.com) for more details!
+:star: In the meantime, I've trained models that surpass **94%** accuracy. They are readily available via an easy-to-use API [Get in touch](mailto:phar.ai@protonmail.com) for more details!
 
 ## Introduction
 
