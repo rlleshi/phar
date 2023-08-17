@@ -2,7 +2,7 @@
 
 ## Update
 
-:star: In the meantime, I've trained models that surpass **94%** accuracy. They are readily available via an easy-to-use API [Get in touch](mailto:phar.ai@protonmail.com) for more details!
+:star: In the meantime, I've trained models that surpass **94%** accuracy on 20 action categories. They are readily available via an easy-to-use API. [Get in touch](mailto:phar.ai@protonmail.com) for more details!
 
 ## Introduction
 
