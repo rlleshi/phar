@@ -2,7 +2,17 @@
 
 ## Update
 
-:star: In the meantime, I've trained models that surpass **94%** accuracy on 20 action categories. They are readily available via an easy-to-use API. [Get in touch](mailto:phar.ai@protonmail.com) for more details!
+:star: In the meantime, I've trained models that surpass **94%** accuracy on [20 action categories](https://github.com/rlleshi/phar/blob/master/resources/annotations/current_annotations.txt). They are readily available via an easy-to-use API. [Get in touch](mailto:phar.ai@protonmail.com) for more details!
+
+How this AI can benefit you:
+
+1. 🏷️ **Automated Tagging**: Can easily extend to more categories as required.
+2. ⏱️ **Automated Timestamp Generation**: Allows users to swiftly navigate to any section of the video, offering a user-friendly experience akin to YouTube's.
+3. 🔍 **Improved Recommendation System**: Enhances content suggestions by analyzing the occurrences and timings within the video, providing more relevant and tailored recommendations.
+4. 🚫 **Content Filtering**: Facilitates the filtering of specific content, such as non-sexual content, or certain actions and positions, allowing for a more personalized user experience.
+5. 🎞️ **Shorts**: Enables the extraction of specific actions from videos to create concise and engaging clips, a feature particularly popular among Gen Z users.
+
+If you're interested in some of the technical details of the first version, read on!
 
 ## Introduction
 
