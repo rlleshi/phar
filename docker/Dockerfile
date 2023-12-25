@@ -33,6 +33,7 @@ RUN pip install mmdet==2.12.0
 
 # install extra dependencies
 WORKDIR /workspace/phar
+COPY requirements/extra.txt requirements/extra.txt
 RUN pip install -r requirements/extra.txt
 
 # download models
