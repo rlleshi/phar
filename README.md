@@ -2,7 +2,7 @@
 
 ## Update
 
-:star: In the meantime, I've trained models that surpass **94%** accuracy on [20 action categories](https://github.com/rlleshi/phar/blob/master/resources/annotations/current_annotations.txt). They are readily available via an easy-to-use API. [Get in touch](mailto:phar.ai@protonmail.com) for more details!
+:star: In the meantime, I've trained models that surpass **94%** accuracy on [20 action categories](https://github.com/rlleshi/phar/blob/master/resources/annotations/current_annotations.txt). They are readily available via an easy-to-use API. More infos [here](https://phar-virid.vercel.app/), or directly [get in touch](mailto:phar.ai@protonmail.com) for business inquiries!
 
 How this AI can benefit you:
 
