@@ -368,6 +368,12 @@ def audio_inference(clip: str, coeffs: list):
     subprocess.run(['ffmpeg', '-i', clip, '-map', '0:a', '-y', out_audio],
                    capture_output=True)
     time.sleep(1)
+    if osp.exists(out_audio):
+        verbose_print(f'Generated WAV for clip {clip}', style='yellow')
+    else:
+        verbose_print(f'FAILED to generate WAV for some reason for clip {clip}', style='yellow')
+        PREDS[clip]['audio'] = placeholder
+        return
 
     data, rate = sf.read(out_audio)
     meter = pyln.Meter(rate)  # meter works with decibels
@@ -378,9 +384,15 @@ def audio_inference(clip: str, coeffs: list):
         return
 
     out_feature = f'{osp.splitext(out_audio)[0]}.npy'
-    subprocess.run(
-        ['python', AUDIO_FEATURE_SCRIPT, TEMP, TEMP, '--ext', 'wav'],
+    exec_result = subprocess.run(
+        ['python', AUDIO_FEATURE_SCRIPT, TEMP, TEMP, '--ext', 'wav', '--level', '0'],
         capture_output=True)
+    if osp.exists(out_feature):
+        verbose_print(f'Generated audio feature for clip {clip}', style='yellow')
+    else:
+        verbose_print(f'FAILED to generate feature file for some reason for clip {clip}', style='yellow')
+        PREDS[clip]['audio'] = placeholder
+        return
 
     results = inference_recognizer(AUDIO_MODEL, out_feature)
     results = [(AUDIO_LABELS[k[0]], k[1]) for k in results]
