@@ -45,7 +45,7 @@ FONTCOLOR = (255, 255, 0)  # BGR, white
 FONTCOLOR_SCORE = (0, 165, 255)
 THICKNESS = 1
 LINETYPE = 1
-AUDIO_FEATURE_SCRIPT = 'mmaction2/tools/data/build_audio_features.py'
+AUDIO_FEATURE_SCRIPT = 'src/build_audio_features.py'
 LOUD_WEIGHT = None
 TEMP = 'temp'
 x, y = 10, 30
@@ -161,7 +161,8 @@ def cleanup(original_video, tmp_out_video, out_video):
     ]
     subprocess.run(subargs_add, capture_output=True)
     # cleanup
-    os.remove('audio.mp3')
+    if osp.exists('audio.mp4'):
+        os.remove('audio.mp3')
     os.remove(tmp_out_video)
 
 
